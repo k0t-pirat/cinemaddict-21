@@ -12,6 +12,7 @@
   ],
   "scripts": {
     "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
     "build": "webpack --mode production",
     "start": "webpack serve --mode development --open"
   },

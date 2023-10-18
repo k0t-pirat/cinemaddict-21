@@ -15,16 +15,20 @@ export default class FilmsListPresenter {
     this.showMoreContainer = this.filmsListView.getShowMoreContainer();
   }
 
-  init() {
+  init({filmModel}) {
+    this.filmModel = filmModel;
+    this.films = [...filmModel.getFilms()];
+    this.allComments = [...filmModel.getComments()];
+
     render(new FilterView(), this.mainContainer);
     render(new SortView(), this.mainContainer);
     render(this.filmsListView, this.mainContainer);
 
-    for (let i = 0; i < 5; i++) {
-      render(new FilmCardView(), this.filmsListContainer);
+    for (const film of this.films) {
+      render(new FilmCardView(film), this.filmsListContainer);
     }
 
     render(new ShowMoreView(), this.showMoreContainer);
-    render(new FilmPopupView(), this.bodyContainer);
+    render(new FilmPopupView(this.films[0], this.allComments), this.bodyContainer);
   }
 }
