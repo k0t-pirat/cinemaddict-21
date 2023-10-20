@@ -1,12 +1,14 @@
 import { getFilms, getComments } from './films';
 
-const FILMS_COUNT = 12;
+// Изменение этой константы приводит к обновлению моковых данных
+const FILMS_COUNT = 22;
 
 const shouldUpdateMocks = () => {
   const mockFilmsJSON = localStorage.getItem('cinemaaddict-films');
   const mockCommentsJSON = localStorage.getItem('cinemaaddict-comments');
   const wasFilmsLengthChanged = !(mockFilmsJSON && JSON.parse(mockFilmsJSON).length === FILMS_COUNT);
 
+  // return true;
   return !mockCommentsJSON || wasFilmsLengthChanged;
 };
 

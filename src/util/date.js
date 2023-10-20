@@ -1,4 +1,4 @@
-import {MONTHS, DateType} from '../const';
+import { DateType, MONTHS } from '../const/date';
 
 const TIME_MINUTES = 60;
 

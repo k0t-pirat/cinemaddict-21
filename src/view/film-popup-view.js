@@ -1,4 +1,4 @@
-import { DateType } from '../const';
+import { DateType } from '../const/date';
 import AbstractView from '../framework/view/abstract-view';
 import { formatDate, formatDuration } from '../util/date';
 

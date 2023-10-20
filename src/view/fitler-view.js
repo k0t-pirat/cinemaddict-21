@@ -1,17 +1,30 @@
+import { FilterType } from '../const/common';
 import AbstractView from '../framework/view/abstract-view';
+import {upFirstLetter} from '../util/common';
 
-const createFilterTemplate = () => (
+
+const createFilterTemplate = (countedFilter, activeFilter) => (
   `<nav class="main-navigation">
-    <a href="#all" class="main-navigation__item main-navigation__item--active">All movies</a>
-    <a href="#watchlist" class="main-navigation__item">Watchlist <span class="main-navigation__item-count">13</span></a>
-    <a href="#history" class="main-navigation__item">History <span class="main-navigation__item-count">4</span></a>
-    <a href="#favorites" class="main-navigation__item">Favorites <span class="main-navigation__item-count">8</span></a>
+  ${Object.entries(countedFilter).map(([filterType, filterCount]) => (
+    `<a href="#${filterType}" class="main-navigation__item${filterType === activeFilter ? ' main-navigation__item--active' : ''}">
+      ${upFirstLetter(filterType)} ${filterType === FilterType.ALL ? 'movies' : `<span class="main-navigation__item-count">${filterCount}</span>`}
+    </a>`
+  )).join('')}
   </nav>`
 );
 
 export default class FilterView extends AbstractView {
+  #countedFilter = null;
+  #activeFilter = '';
+
+  constructor(countedFilter, activeFilter) {
+    super();
+    this.#countedFilter = countedFilter;
+    this.#activeFilter = activeFilter;
+  }
+
   get template() {
-    return createFilterTemplate();
+    return createFilterTemplate(this.#countedFilter, this.#activeFilter);
   }
 }
 

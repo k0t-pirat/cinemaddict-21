@@ -1,21 +1,27 @@
-import UserRankView from './view/user-rank-view';
 import FooterStatisticsView from './view/footer-statistics-view';
 import FilmsListPresenter from './presenter/films-list-presenter';
 import FilmModel from './model/film-model';
 import { RenderPosition, render } from './framework/render';
+import FilterPresenter from './presenter/filter-presenter';
+import FilterModel from './model/filter-model';
+import UserRankPresenter from './presenter/user-rank-presenter';
 
 const headerContainer = document.querySelector('.header');
 const mainContainer = document.querySelector('.main');
 const footerContainer = document.querySelector('.footer__statistics');
 
-const userRankView = new UserRankView();
-const footerStatisticsView = new FooterStatisticsView();
-
-render(userRankView, headerContainer, RenderPosition.BEFOREEND);
-render(footerStatisticsView, footerContainer, RenderPosition.AFTERBEGIN);
+const filterModel = new FilterModel();
 
 const filmModel = new FilmModel();
 filmModel.init();
+
+render(new FooterStatisticsView({filmModel}), footerContainer, RenderPosition.AFTERBEGIN);
+
+const userRankPresenter = new UserRankPresenter({container: headerContainer, filmModel});
+userRankPresenter.init();
+
+const filterPresenter = new FilterPresenter({filterContainer: mainContainer, filterModel, filmModel});
+filterPresenter.init();
 
 const filmsListPresenter = new FilmsListPresenter({container: mainContainer, filmModel});
 filmsListPresenter.init();

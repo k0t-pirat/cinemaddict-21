@@ -1,5 +1,4 @@
 import FilmsListView from '../view/films-list-view';
-import FilterView from '../view/fitler-view';
 import SortView from '../view/sort-view';
 import FilmCardView from '../view/film-card-view';
 import ShowMoreView from '../view/show-more-view';
@@ -89,7 +88,6 @@ export default class FilmsListPresenter {
   }
 
   #renderList() {
-    render(new FilterView(), this.#mainContainer);
     render(new SortView(), this.#mainContainer);
     render(this.#filmsWrapperView, this.#mainContainer);
 
