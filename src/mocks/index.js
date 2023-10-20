@@ -1,11 +1,17 @@
 import { getFilms, getComments } from './films';
 
-const FILMS_COUNT = 5;
+const FILMS_COUNT = 12;
 
-if (!localStorage.getItem('cinemaaddict-films')) {
+const shouldUpdateMocks = () => {
+  const mockFilmsJSON = localStorage.getItem('cinemaaddict-films');
+  const mockCommentsJSON = localStorage.getItem('cinemaaddict-comments');
+  const wasFilmsLengthChanged = !(mockFilmsJSON && JSON.parse(mockFilmsJSON).length === FILMS_COUNT);
+
+  return !mockCommentsJSON || wasFilmsLengthChanged;
+};
+
+if (shouldUpdateMocks()) {
   localStorage.setItem('cinemaaddict-films', JSON.stringify(getFilms(FILMS_COUNT)));
-}
-if (!localStorage.getItem('cinemaaddict-comments')) {
   localStorage.setItem('cinemaaddict-comments', JSON.stringify(getComments()));
 }
 

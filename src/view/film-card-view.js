@@ -1,5 +1,5 @@
 import { DateType } from '../const';
-import { createElement } from '../render';
+import AbstractView from '../framework/view/abstract-view';
 import {formatDate, formatDuration} from '../util/date';
 
 const MAX_DESCRIPTION_LENGTH = 140;
@@ -35,25 +35,25 @@ const createFilmCardTemplate = (film) => {
   );
 };
 
-export default class FilmCardView {
-  constructor(film) {
-    this.film = film;
+export default class FilmCardView extends AbstractView {
+  #film = null;
+  #handleLinkClick = null;
+
+  constructor({film, onLinkClick}) {
+    super();
+    this.#film = film;
+    this.#handleLinkClick = onLinkClick;
+
+    this.element.querySelector('.film-card__link').addEventListener('click', this.#linkClickHandler);
   }
 
-  getTemplate() {
-    return createFilmCardTemplate(this.film);
+  get template() {
+    return createFilmCardTemplate(this.#film);
   }
 
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemplate());
-    }
-
-    return this.element;
-  }
-
-  removeElement() {
-    this.element = null;
-  }
+  #linkClickHandler = (evt) => {
+    evt.preventDefault();
+    this.#handleLinkClick();
+  };
 }
 

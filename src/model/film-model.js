@@ -1,21 +1,24 @@
 import { getMockComments, getMockFilms } from '../mocks';
 
 export default class FilmModel {
+  #films = [];
+  #comments = [];
+
   constructor() {
-    this.films = [];
-    this.comments = [];
+    this.#films = [];
+    this.#comments = [];
   }
 
   init() {
-    this.films = getMockFilms();
-    this.comments = getMockComments();
+    this.#films = getMockFilms();
+    this.#comments = getMockComments();
   }
 
-  getFilms() {
-    return this.films;
+  get films() {
+    return this.#films;
   }
 
-  getComments() {
-    return this.comments;
+  get comments() {
+    return this.#comments;
   }
 }

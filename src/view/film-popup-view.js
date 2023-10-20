@@ -1,5 +1,5 @@
 import { DateType } from '../const';
-import { createElement } from '../render';
+import AbstractView from '../framework/view/abstract-view';
 import { formatDate, formatDuration } from '../util/date';
 
 const EMOJIES = ['smile', 'sleeping', 'puke', 'angry'];
@@ -142,26 +142,28 @@ const createFilmPopupTemplate = (film, allComments) => {
   );
 };
 
-export default class FilmPopupView {
-  constructor(film, allComments) {
-    this.film = film;
-    this.allComments = allComments;
+export default class FilmPopupView extends AbstractView {
+  #film = null;
+  #allComments = [];
+  #handleCloseButtonClick = null;
+
+  constructor({film, allComments, onCloseButtonClick}) {
+    super();
+    this.#film = film;
+    this.#allComments = allComments;
+    this.#handleCloseButtonClick = onCloseButtonClick;
   }
 
-  getTemplate() {
-    return createFilmPopupTemplate(this.film, this.allComments);
+  init() {
+    this.element.querySelector('.film-details__close-btn').addEventListener('click', this.#closeButtonClickHandler);
   }
 
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemplate());
-    }
-
-    return this.element;
+  get template() {
+    return createFilmPopupTemplate(this.#film, this.#allComments);
   }
 
-  removeElement() {
-    this.element = null;
-  }
+  #closeButtonClickHandler = () => {
+    this.#handleCloseButtonClick();
+  };
 }
 
