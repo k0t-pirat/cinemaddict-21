@@ -1,55 +1,100 @@
-import { remove, render } from '../framework/render';
+import { remove, render, replace } from '../framework/render';
+import { replaceWithScroll } from '../util/common';
 import FilmCardView from '../view/film-card-view';
 import FilmPopupView from '../view/film-popup-view';
+
+const Mode = {
+  DEFAULT: 'DEFAULT',
+  EDITING: 'EDITING',
+};
+const statusTranslation = {
+  watchlist: 'inWatchlist',
+  watched: 'alreadyWatched',
+  favorite: 'isFavorite',
+};
 
 export default class FilmPresenter {
   #film = null;
   #allComments = [];
   #filmsContainer = null;
 
-  constructor({film, allComments, filmsContainer}) {
-    this.#film = film;
+  #filmCardView = null;
+  #filmPopupView = null;
+  #mode = Mode.DEFAULT;
+  #handleDataChange = null;
+
+  constructor({ allComments, filmsContainer, onDataChange}) {
+    // this.#film = film;
     this.#allComments = allComments;
     this.#filmsContainer = filmsContainer;
+    this.#handleDataChange = onDataChange;
   }
 
-  init() {
+  init(film) {
+    this.#film = film;
     this.#renderFilm(this.#film);
   }
 
   #renderFilm(film) {
-    const escKeydownHandler = (evt) => {
-      if (evt.key === 'Escape') {
-        evt.preventDefault();
-        closePopup();
-      }
-    };
-    const filmCardView = new FilmCardView({
+    const prevFilmCardView = this.#filmCardView;
+    const prevFilmPopupView = this.#filmPopupView;
+
+    this.#filmCardView = new FilmCardView({
       film,
       onLinkClick: () => {
-        openPopup();
-      }
+        this.#openPopup();
+      },
+      onFilmStatusClick: this.#handleFilmStatusClick,
     });
-    const filmPopupView = new FilmPopupView({
+    this.#filmPopupView = new FilmPopupView({
       film,
       allComments: this.#allComments,
       onCloseButtonClick: () => {
-        closePopup();
-      }
+        this.#closePopup();
+      },
+      onFilmStatusClick: this.#handleFilmStatusClick,
     });
 
-    render(filmCardView, this.#filmsContainer);
-
-    function openPopup() {
-      render(filmPopupView, document.body);
-      filmPopupView.init();
-      document.body.classList.add('hide-overflow');
-      document.addEventListener('keydown', escKeydownHandler);
+    if (prevFilmCardView === null || prevFilmPopupView === null) {
+      render(this.#filmCardView, this.#filmsContainer);
+      return;
     }
-    function closePopup() {
-      remove(filmPopupView);
-      document.body.classList.remove('hide-overflow');
-      document.removeEventListener('keydown', escKeydownHandler);
+
+    replace(this.#filmCardView, prevFilmCardView);
+
+    if (this.#mode === Mode.EDITING) {
+      replaceWithScroll(this.#filmPopupView, prevFilmPopupView);
+      this.#filmPopupView.init();
     }
   }
+
+  #escKeydownHandler = (evt) => {
+    if (evt.key === 'Escape') {
+      evt.preventDefault();
+      this.#closePopup();
+    }
+  };
+
+  #openPopup() {
+    render(this.#filmPopupView, document.body);
+    this.#filmPopupView.init();
+    document.body.classList.add('hide-overflow');
+    document.addEventListener('keydown', this.#escKeydownHandler);
+    this.#mode = Mode.EDITING;
+  }
+
+  #closePopup() {
+    remove(this.#filmPopupView);
+    document.body.classList.remove('hide-overflow');
+    document.removeEventListener('keydown', this.#escKeydownHandler);
+    this.#mode = Mode.DEFAULT;
+  }
+
+  #handleFilmStatusClick = (status) => {
+    const translatedStatus = statusTranslation[status];
+    this.#handleDataChange({
+      ...this.#film,
+      userDetails: {...this.#film.userDetails, [translatedStatus]: !this.#film.userDetails[translatedStatus]},
+    });
+  };
 }

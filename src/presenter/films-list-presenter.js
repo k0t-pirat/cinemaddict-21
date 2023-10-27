@@ -5,6 +5,7 @@ import FilmsEmptyView from '../view/films-empty-view';
 import FilmsWrapperView from '../view/films-wrapper-view';
 import FilmPresenter from './film-presenter';
 import ShowMorePresenter from './show-more-presenter';
+import { updateItem } from '../util/common';
 
 
 export default class FilmsListPresenter {
@@ -16,6 +17,7 @@ export default class FilmsListPresenter {
   #films = [];
   #allComments = [];
   #showMorePresenter = null;
+  #filmPresenters = new Map();
 
   constructor({container, filmModel}) {
     this.#mainContainer = container;
@@ -35,12 +37,18 @@ export default class FilmsListPresenter {
 
   #renderGroup = ({currentCount, nextCount}) => {
     for (const film of this.#films.slice(currentCount, nextCount)) {
-      const filmPresenter = new FilmPresenter({film, allComments: this.#allComments, filmsContainer: this.#filmsListView.filmsContainer});
-      filmPresenter.init();
+      const filmPresenter = new FilmPresenter({
+        allComments: this.#allComments,
+        filmsContainer: this.#filmsListView.filmsContainer,
+        onDataChange: this.#handleFilmChange,
+      });
+      filmPresenter.init(film);
+      this.#filmPresenters.set(film.id, filmPresenter);
     }
   };
 
   #renderList() {
+    // console.log(this.#films)
     render(new SortView(), this.#mainContainer);
     render(this.#filmsWrapperView, this.#mainContainer);
 
@@ -53,4 +61,9 @@ export default class FilmsListPresenter {
 
     this.#showMorePresenter.init(this.#films.length);
   }
+
+  #handleFilmChange = (upadtedFilm) => {
+    this.#films = updateItem(this.#films, upadtedFilm);
+    this.#filmPresenters.get(upadtedFilm.id).init(upadtedFilm);
+  };
 }

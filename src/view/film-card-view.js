@@ -27,9 +27,9 @@ const createFilmCardTemplate = (film) => {
         <span class="film-card__comments">${formatCommentsCount(filmComments.length)}</span>
       </a>
       <div class="film-card__controls">
-        <button class="${`film-card__controls-item film-card__controls-item--add-to-watchlist${alreadyWatched ? ' film-card__controls-item--active' : ''}`}" type="button">Add to watchlist</button>
-        <button class="${`film-card__controls-item film-card__controls-item--mark-as-watched${inWatchlist ? ' film-card__controls-item--active' : ''}`}" type="button">Mark as watched</button>
-        <button class="${`film-card__controls-item film-card__controls-item--favorite${isFavorite ? ' film-card__controls-item--active' : ''}`}" type="button">Mark as favorite</button>
+        <button class="${`film-card__controls-item film-card__controls-item--add-to-watchlist${inWatchlist ? ' film-card__controls-item--active' : ''}`}" type="button" name="watchlist">Add to watchlist</button>
+        <button class="${`film-card__controls-item film-card__controls-item--mark-as-watched${alreadyWatched ? ' film-card__controls-item--active' : ''}`}" type="button" name="watched">Mark as watched</button>
+        <button class="${`film-card__controls-item film-card__controls-item--favorite${isFavorite ? ' film-card__controls-item--active' : ''}`}" type="button" name="favorite">Mark as favorite</button>
       </div>
     </article>`
   );
@@ -38,13 +38,16 @@ const createFilmCardTemplate = (film) => {
 export default class FilmCardView extends AbstractView {
   #film = null;
   #handleLinkClick = null;
+  #handleFilmStatusClick = null;
 
-  constructor({film, onLinkClick}) {
+  constructor({film, onLinkClick, onFilmStatusClick}) {
     super();
     this.#film = film;
     this.#handleLinkClick = onLinkClick;
+    this.#handleFilmStatusClick = onFilmStatusClick;
 
     this.element.querySelector('.film-card__link').addEventListener('click', this.#linkClickHandler);
+    this.element.querySelector('.film-card__controls').addEventListener('click', this.#filmStatusClickHandler);
   }
 
   get template() {
@@ -54,6 +57,14 @@ export default class FilmCardView extends AbstractView {
   #linkClickHandler = (evt) => {
     evt.preventDefault();
     this.#handleLinkClick();
+  };
+
+  #filmStatusClickHandler = (evt) => {
+    if (evt.target.tagName !== 'BUTTON') {
+      return;
+    }
+
+    this.#handleFilmStatusClick(evt.target.name);
   };
 }
 

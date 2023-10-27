@@ -146,16 +146,19 @@ export default class FilmPopupView extends AbstractView {
   #film = null;
   #allComments = [];
   #handleCloseButtonClick = null;
+  #handleFilmStatusClick = null;
 
-  constructor({film, allComments, onCloseButtonClick}) {
+  constructor({film, allComments, onCloseButtonClick, onFilmStatusClick}) {
     super();
     this.#film = film;
     this.#allComments = allComments;
     this.#handleCloseButtonClick = onCloseButtonClick;
+    this.#handleFilmStatusClick = onFilmStatusClick;
   }
 
   init() {
     this.element.querySelector('.film-details__close-btn').addEventListener('click', this.#closeButtonClickHandler);
+    this.element.querySelector('.film-details__controls').addEventListener('click', this.#filmStatusClickHandler);
   }
 
   get template() {
@@ -164,6 +167,14 @@ export default class FilmPopupView extends AbstractView {
 
   #closeButtonClickHandler = () => {
     this.#handleCloseButtonClick();
+  };
+
+  #filmStatusClickHandler = (evt) => {
+    if (evt.target.tagName !== 'BUTTON') {
+      return;
+    }
+
+    this.#handleFilmStatusClick(evt.target.name);
   };
 }
 
