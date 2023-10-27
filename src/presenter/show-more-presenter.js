@@ -5,10 +5,10 @@ const COUNT_STEP = 5;
 
 export default class ShowMorePresenter {
   #showMoreView = null;
-  #currentCount = 0;
   #showMoreContainer = null;
-  #filmsLength = 0;
   #renderGroup = null;
+  #filmsLength = 0;
+  #currentCount = 0;
 
   constructor({renderGroup, showMoreContainer}) {
     this.#renderGroup = renderGroup;
@@ -25,6 +25,12 @@ export default class ShowMorePresenter {
     if (this.#filmsLength > COUNT_STEP) {
       render(this.#showMoreView, this.#showMoreContainer);
     }
+  }
+
+  destroy() {
+    this.#filmsLength = 0;
+    this.#currentCount = 0;
+    remove(this.#showMoreView);
   }
 
   #remove() {

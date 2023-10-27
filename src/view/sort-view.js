@@ -1,16 +1,40 @@
+import { SortType } from '../const';
 import AbstractView from '../framework/view/abstract-view';
 
-const createSortTemplate = () => (
+const createSortTemplate = (activeSortType) => (
   `<ul class="sort">
-    <li><a href="#" class="sort__button sort__button--active">Sort by default</a></li>
-    <li><a href="#" class="sort__button">Sort by date</a></li>
-    <li><a href="#" class="sort__button">Sort by rating</a></li>
+  ${Object.values(SortType).map((sortType) => (
+    `<li>
+      <a href="#" data-sort-type="${sortType}" class="sort__button${sortType === activeSortType ? ' sort__button--active' : ''}">
+        Sort by ${sortType}
+      </a>
+    </li>`
+  )).join('')}
   </ul>`
 );
 
 export default class SortView extends AbstractView {
-  get template() {
-    return createSortTemplate();
+  #activeSortType = SortType.DEFAULT;
+  #handleSortClick = null;
+
+  constructor({activeSortType, onSortClick} = {}) {
+    super();
+    this.#handleSortClick = onSortClick;
+    this.#activeSortType = activeSortType;
+
+    this.element.addEventListener('click', this.#sortClickHandler);
   }
+
+  get template() {
+    return createSortTemplate(this.#activeSortType);
+  }
+
+  #sortClickHandler = (evt) => {
+    if (evt.target.tagName !== 'A') {
+      return;
+    }
+    evt.preventDefault();
+    this.#handleSortClick(evt.target.dataset.sortType);
+  };
 }
 

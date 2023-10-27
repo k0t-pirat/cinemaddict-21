@@ -1,4 +1,4 @@
-import { render } from '../framework/render';
+import { remove, render } from '../framework/render';
 import FilmsListView from '../view/films-list-view';
 import SortView from '../view/sort-view';
 import FilmsEmptyView from '../view/films-empty-view';
@@ -6,7 +6,8 @@ import FilmsWrapperView from '../view/films-wrapper-view';
 import FilmPresenter from './film-presenter';
 import ShowMorePresenter from './show-more-presenter';
 import { updateItem } from '../util/common';
-
+import { SortType } from '../const';
+import { sortFilms } from '../util/sort';
 
 export default class FilmsListPresenter {
   #mainContainer = null;
@@ -18,6 +19,9 @@ export default class FilmsListPresenter {
   #allComments = [];
   #showMorePresenter = null;
   #filmPresenters = new Map();
+  #sortView = null;
+  #activeSortType = SortType.DEFAULT;
+  #defaultFilms = [];
 
   constructor({container, filmModel}) {
     this.#mainContainer = container;
@@ -25,11 +29,11 @@ export default class FilmsListPresenter {
     this.#filmsEmptyView = new FilmsEmptyView();
     this.#filmsListView = new FilmsListView();
     this.#filmModel = filmModel;
-    this.#showMorePresenter = new ShowMorePresenter({renderGroup: this.#renderGroup, showMoreContainer: this.#filmsListView.element});
   }
 
   init() {
     this.#films = [...this.#filmModel.films];
+    this.#defaultFilms = [...this.#filmModel.films];
     this.#allComments = [...this.#filmModel.comments];
 
     this.#renderList();
@@ -49,8 +53,10 @@ export default class FilmsListPresenter {
   };
 
   #renderList() {
-    // console.log(this.#films)
-    render(new SortView(), this.#mainContainer);
+    this.#sortView = new SortView({onSortClick: this.#handleSortChange, activeSortType: this.#activeSortType});
+    this.#showMorePresenter = new ShowMorePresenter({renderGroup: this.#renderGroup, showMoreContainer: this.#filmsListView.element});
+
+    render(this.#sortView, this.#mainContainer);
     render(this.#filmsWrapperView, this.#mainContainer);
 
     if (this.#films.length === 0) {
@@ -59,16 +65,38 @@ export default class FilmsListPresenter {
     }
 
     render(this.#filmsListView, this.#filmsWrapperView.element);
-
     this.#showMorePresenter.init(this.#films.length);
+  }
+
+  #clearList() {
+    this.#filmPresenters.forEach((presenter) => presenter.destroy());
+    this.#filmPresenters.clear();
+    this.#showMorePresenter.destroy();
+
+    remove(this.#filmsListView);
+    remove(this.#filmsWrapperView);
+    remove(this.#sortView);
   }
 
   #handleModeChange = () => {
     this.#filmPresenters.forEach((presenter) => presenter.resetView());
   };
 
-  #handleFilmChange = (upadtedFilm) => {
-    this.#films = updateItem(this.#films, upadtedFilm);
-    this.#filmPresenters.get(upadtedFilm.id).init(upadtedFilm);
+  #handleFilmChange = (updatedFilm) => {
+    this.#films = updateItem(this.#films, updatedFilm);
+    this.#defaultFilms = updateItem(this.#defaultFilms, updatedFilm);
+    this.#filmPresenters.get(updatedFilm.id).init(updatedFilm);
+  };
+
+  #handleSortChange = (sortType) => {
+    if (this.#activeSortType === sortType) {
+      return;
+    }
+    this.#activeSortType = sortType;
+    const films = [...this.#defaultFilms];
+    this.#films = sortFilms[sortType](films);
+
+    this.#clearList();
+    this.#renderList();
   };
 }

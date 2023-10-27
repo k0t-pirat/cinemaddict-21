@@ -25,7 +25,6 @@ export default class FilmPresenter {
   #handleDataChange = null;
 
   constructor({ allComments, filmsContainer, onModeChange, onDataChange}) {
-    // this.#film = film;
     this.#allComments = allComments;
     this.#filmsContainer = filmsContainer;
     this.#handleModeChange = onModeChange;
@@ -35,6 +34,11 @@ export default class FilmPresenter {
   init(film) {
     this.#film = film;
     this.#renderFilm(this.#film);
+  }
+
+  destroy() {
+    this.#closePopup();
+    remove(this.#filmCardView);
   }
 
   resetView() {
