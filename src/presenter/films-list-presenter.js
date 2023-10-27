@@ -40,6 +40,7 @@ export default class FilmsListPresenter {
       const filmPresenter = new FilmPresenter({
         allComments: this.#allComments,
         filmsContainer: this.#filmsListView.filmsContainer,
+        onModeChange: this.#handleModeChange,
         onDataChange: this.#handleFilmChange,
       });
       filmPresenter.init(film);
@@ -61,6 +62,10 @@ export default class FilmsListPresenter {
 
     this.#showMorePresenter.init(this.#films.length);
   }
+
+  #handleModeChange = () => {
+    this.#filmPresenters.forEach((presenter) => presenter.resetView());
+  };
 
   #handleFilmChange = (upadtedFilm) => {
     this.#films = updateItem(this.#films, upadtedFilm);

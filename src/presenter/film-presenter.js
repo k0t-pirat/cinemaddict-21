@@ -21,18 +21,26 @@ export default class FilmPresenter {
   #filmCardView = null;
   #filmPopupView = null;
   #mode = Mode.DEFAULT;
+  #handleModeChange = null;
   #handleDataChange = null;
 
-  constructor({ allComments, filmsContainer, onDataChange}) {
+  constructor({ allComments, filmsContainer, onModeChange, onDataChange}) {
     // this.#film = film;
     this.#allComments = allComments;
     this.#filmsContainer = filmsContainer;
+    this.#handleModeChange = onModeChange;
     this.#handleDataChange = onDataChange;
   }
 
   init(film) {
     this.#film = film;
     this.#renderFilm(this.#film);
+  }
+
+  resetView() {
+    if (this.#mode !== Mode.DEFAULT) {
+      this.#closePopup();
+    }
   }
 
   #renderFilm(film) {
@@ -76,6 +84,7 @@ export default class FilmPresenter {
   };
 
   #openPopup() {
+    this.#handleModeChange();
     render(this.#filmPopupView, document.body);
     this.#filmPopupView.init();
     document.body.classList.add('hide-overflow');
