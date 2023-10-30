@@ -10,9 +10,9 @@ export default class UserRankPresenter {
     this.#container = container;
     this.#filmModel = filmModel;
 
-    this.#filmModel.handleLoad = () => {
+    this.#filmModel.addObserver(() => {
       this.init();
-    };
+    });
   }
 
   get watchedFilmsCount() {

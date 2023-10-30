@@ -1,12 +1,12 @@
+import Observable from '../framework/observable';
 import { getMockFilmsPromise } from '../mocks';
 
-export default class FilmModel {
+export default class FilmModel extends Observable {
   #films = [];
-  #callback = null;
   #isLoading = false;
-  #loadHandlers = [];
 
   constructor() {
+    super();
     this.#films = [];
   }
 
@@ -16,13 +16,10 @@ export default class FilmModel {
       .then((loadedFilms) => {
         this.#films = loadedFilms;
         this.#isLoading = false;
-        // this.#callback();
-        this.handleLoad.forEach((handler) => {
-          handler();
-        });
+        this._notify();
       })
       .catch(() => {
-        this.#films = [];
+        throw new Error('catch error in getMockFilmsPromise');
       });
   }
 
@@ -32,21 +29,5 @@ export default class FilmModel {
 
   get isLoading() {
     return this.#isLoading;
-  }
-
-  get callback() {
-    return this.#callback;
-  }
-
-  set callback(callback) {
-    this.#callback = callback;
-  }
-
-  get handleLoad() {
-    return this.#loadHandlers;
-  }
-
-  set handleLoad(handleLoad) {
-    this.#loadHandlers.push(handleLoad);
   }
 }

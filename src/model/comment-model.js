@@ -2,7 +2,7 @@ import { getMockCommentsPromise } from '../mocks';
 
 export default class CommentModel {
   #comments = [];
-  #callback = null;
+  #handleLoad = null;
   #isLoading = false;
 
   constructor() {
@@ -15,10 +15,7 @@ export default class CommentModel {
       .then((loadedComments) => {
         this.#comments = loadedComments;
         this.#isLoading = false;
-        this.callback();
-      })
-      .catch(() => {
-        this.#comments = [];
+        this.handleLoad();
       });
   }
 
@@ -30,11 +27,11 @@ export default class CommentModel {
     return this.#isLoading;
   }
 
-  get callback() {
-    return this.#callback;
+  get handleLoad() {
+    return this.#handleLoad;
   }
 
-  set callback(callback) {
-    this.#callback = callback;
+  set handleLoad(callback) {
+    this.#handleLoad = callback;
   }
 }

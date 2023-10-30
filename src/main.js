@@ -19,9 +19,9 @@ filmModel.init();
 const commentModel = new CommentModel();
 commentModel.init();
 
-filmModel.handleLoad = () => {
+filmModel.addObserver(() => {
   render(new FooterStatisticsView({filmModel}), footerContainer, RenderPosition.AFTERBEGIN);
-};
+});
 
 const userRankPresenter = new UserRankPresenter({container: headerContainer, filmModel});
 userRankPresenter.init();

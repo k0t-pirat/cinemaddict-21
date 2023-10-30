@@ -34,16 +34,16 @@ export default class FilmsListPresenter {
     this.#filmModel = filmModel;
     this.#commentModel = commentModel;
 
-    this.#commentModel.callback = () => {
+    this.#commentModel.handleLoad = () => {
       this.#update();
     };
-    this.#filmModel.handleLoad = () => {
+    this.#filmModel.addObserver(() => {
       this.#update();
-    };
+    });
   }
 
   init() {
-    if (this.#filmModel.isLoading && this.#filmModel.isLoading) {
+    if (this.#filmModel.isLoading || this.#filmModel.isLoading) {
       render(this.#loaderView, this.#mainContainer);
       return;
     }
@@ -55,7 +55,7 @@ export default class FilmsListPresenter {
   }
 
   #update() {
-    if (!(this.#filmModel.isLoading && this.#filmModel.isLoading)) {
+    if (!(this.#commentModel.isLoading || this.#filmModel.isLoading)) {
       remove(this.#loaderView);
       this.#clearList();
       this.init();
