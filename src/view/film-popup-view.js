@@ -27,7 +27,7 @@ const createCommentsMarkup = (filmComments) =>
           <p class="film-details__comment-text">${text}</p>
           <p class="film-details__comment-info">
             <span class="film-details__comment-author">${author}</span>
-            <span class="film-details__comment-day">${formatDate(date, DateType.DATE_TIME)}</span>
+            <span class="film-details__comment-day">${formatDate(date, DateType.USER)}</span>
             <button class="film-details__comment-delete">Delete</button>
           </p>
         </div>

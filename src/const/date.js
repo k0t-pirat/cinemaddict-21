@@ -2,6 +2,7 @@ export const DateType = {
   YEAR: 'year',
   FULL: 'full',
   DATE_TIME: 'date-time',
+  USER: 'user',
 };
 
 export const MONTHS = [

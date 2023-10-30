@@ -23,6 +23,45 @@ const getFullDateTime = (date) => {
   return `${fullDate} ${dateTime}`;
 };
 
+const getUserDateString = (diff, str) => `${diff} ${str}${diff > 1 ? 's' : ''} ago`;
+
+const getUserDate = (date) => {
+  const nowDate = new Date();
+  const formattedDate = new Date(date);
+  const nowDateInfo = {
+    year: nowDate.getFullYear(),
+    month: nowDate.getMonth(),
+    day: nowDate.getDate(),
+    hours: nowDate.getHours(),
+    minutes: nowDate.getMinutes(),
+  };
+  const dateInfo = {
+    year: formattedDate.getFullYear(),
+    month: formattedDate.getMonth(),
+    day: formattedDate.getDate(),
+    hours: formattedDate.getHours(),
+    minutes: formattedDate.getMinutes(),
+  };
+
+  if (nowDateInfo.year !== dateInfo.year) {
+    return getUserDateString(nowDateInfo.year - dateInfo.year, 'year');
+  } else if (nowDateInfo.month !== dateInfo.month) {
+    return getUserDateString(nowDateInfo.month - dateInfo.month, 'month');
+  } else if (nowDateInfo.day !== dateInfo.day) {
+    return getUserDateString(nowDateInfo.day - dateInfo.day, 'day');
+  } else if (nowDateInfo.hours !== dateInfo.hours) {
+    return getUserDateString(nowDateInfo.hours - dateInfo.hours, 'hour');
+  } else if (nowDateInfo.minutes !== dateInfo.minutes) {
+    if (nowDateInfo.minutes - dateInfo.minutes > 15) {
+      return getUserDateString(nowDateInfo.minutes - dateInfo.minutes, 'minute');
+    } else {
+      return 'a few minutes ago';
+    }
+  } else {
+    return 'now';
+  }
+};
+
 export const formatDate = (date, type) => {
   switch (type) {
     case DateType.YEAR:
@@ -31,6 +70,8 @@ export const formatDate = (date, type) => {
       return getFullDate(date);
     case DateType.DATE_TIME:
       return getFullDateTime(date);
+    case DateType.USER:
+      return getUserDate(date);
   }
 };
 
