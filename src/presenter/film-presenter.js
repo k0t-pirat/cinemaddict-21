@@ -50,6 +50,7 @@ export default class FilmPresenter {
   #renderFilm(film) {
     const prevFilmCardView = this.#filmCardView;
     const prevFilmPopupView = this.#filmPopupView;
+    const prevFilmState = prevFilmPopupView?.getState();
 
     this.#filmCardView = new FilmCardView({
       film,
@@ -61,6 +62,7 @@ export default class FilmPresenter {
     this.#filmPopupView = new FilmPopupView({
       film,
       allComments: this.#allComments,
+      prevState: prevFilmState,
       onCloseButtonClick: () => {
         this.#closePopup();
       },
@@ -97,6 +99,7 @@ export default class FilmPresenter {
   }
 
   #closePopup() {
+    this.#filmPopupView.reset(this.#film);
     remove(this.#filmPopupView);
     document.body.classList.remove('hide-overflow');
     document.removeEventListener('keydown', this.#escKeydownHandler);

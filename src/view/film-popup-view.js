@@ -1,5 +1,5 @@
 import { DateType } from '../const/date';
-import AbstractView from '../framework/view/abstract-view';
+import AbstractStatefulView from '../framework/view/abstract-stateful-view';
 import { formatDate, formatDuration } from '../util/date';
 
 const EMOJIES = ['smile', 'sleeping', 'puke', 'angry'];
@@ -30,16 +30,17 @@ const createCommentsMarkup = (filmComments) =>
     );
   }).join('');
 
-const createEmojiesMarkup = (emojies) =>
+const createEmojiesMarkup = (emojies, currentEmoji) =>
   emojies.map((emoji) => (
-    `<input class="film-details__emoji-item visually-hidden" name="comment-emoji" type="radio" id="emoji-${emoji}" value="${emoji}">
+    `<input class="film-details__emoji-item visually-hidden" name="comment-emoji" type="radio"
+      id="emoji-${emoji}" value="${emoji}"${currentEmoji === emoji ? ' checked' : ''}>
     <label class="film-details__emoji-label" for="emoji-${emoji}">
       <img src="./images/emoji/${emoji}.png" width="30" height="30" alt="emoji">
     </label>`
   )).join('');
 
 const createFilmPopupTemplate = (film, allComments) => {
-  const {filmInfo, userDetails} = film;
+  const {filmInfo, userDetails, currentEmoji} = film;
   const {poster, ageRating, title, altTitle, totalRating, director, writers, actors, release, duration, genres, description} = filmInfo;
   const {alreadyWatched, inWatchlist, isFavorite} = userDetails;
   const filmComments = getFilmComments(film.comments, allComments);
@@ -125,14 +126,16 @@ const createFilmPopupTemplate = (film, allComments) => {
             </ul>
 
             <form class="film-details__new-comment" action="" method="get">
-              <div class="film-details__add-emoji-label"></div>
+              <div class="film-details__add-emoji-label">
+                ${currentEmoji ? `<img src="images/emoji/${currentEmoji}.png" width="55" height="55" alt="emoji-${currentEmoji}">` : ''}
+              </div>
 
               <label class="film-details__comment-label">
                 <textarea class="film-details__comment-input" placeholder="Select reaction below and write comment here" name="comment"></textarea>
               </label>
 
               <div class="film-details__emoji-list">
-                ${createEmojiesMarkup(EMOJIES)}
+                ${createEmojiesMarkup(EMOJIES, currentEmoji)}
               </div>
             </form>
           </section>
@@ -142,27 +145,41 @@ const createFilmPopupTemplate = (film, allComments) => {
   );
 };
 
-export default class FilmPopupView extends AbstractView {
-  #film = null;
+export default class FilmPopupView extends AbstractStatefulView {
   #allComments = [];
   #handleCloseButtonClick = null;
   #handleFilmStatusClick = null;
+  #prevScroll = 0;
 
-  constructor({film, allComments, onCloseButtonClick, onFilmStatusClick}) {
+  constructor({film, allComments, prevState, onCloseButtonClick, onFilmStatusClick}) {
     super();
-    this.#film = film;
     this.#allComments = allComments;
     this.#handleCloseButtonClick = onCloseButtonClick;
     this.#handleFilmStatusClick = onFilmStatusClick;
-  }
 
-  init() {
-    this.element.querySelector('.film-details__close-btn').addEventListener('click', this.#closeButtonClickHandler);
-    this.element.querySelector('.film-details__controls').addEventListener('click', this.#filmStatusClickHandler);
+    this._setState(FilmPopupView.parseFilmToState(film, prevState));
   }
 
   get template() {
-    return createFilmPopupTemplate(this.#film, this.#allComments);
+    return createFilmPopupTemplate(this._state, this.#allComments);
+  }
+
+  init() {
+    this._restoreHandlers();
+  }
+
+  reset(film) {
+    this._setState(FilmPopupView.parseFilmToState(film));
+  }
+
+  getState() {
+    return {currentEmoji: this._state.currentEmoji};
+  }
+
+  _restoreHandlers() {
+    this.element.querySelector('.film-details__close-btn').addEventListener('click', this.#closeButtonClickHandler);
+    this.element.querySelector('.film-details__controls').addEventListener('click', this.#filmStatusClickHandler);
+    this.element.querySelector('.film-details__emoji-list').addEventListener('change', this.#emojiChangeHandler);
   }
 
   #closeButtonClickHandler = () => {
@@ -176,5 +193,36 @@ export default class FilmPopupView extends AbstractView {
 
     this.#handleFilmStatusClick(evt.target.name);
   };
+
+  #emojiChangeHandler = (evt) => {
+    this.#prevScroll = this.element.scrollTop;
+    this.updateElement({
+      currentEmoji: evt.target.value,
+    });
+    this.#setScroll();
+  };
+
+  #setScroll() {
+    this.element.scrollTo(0, this.#prevScroll);
+  }
+
+  static parseFilmToState(film, prevState) {
+    const defaultState = {
+      currentEmoji: '',
+    };
+
+    return {
+      ...film,
+      ...(prevState || defaultState),
+    };
+  }
+
+  static parseStateToFilm(state) {
+    const film = {...state};
+
+    delete film.currentEmoji;
+
+    return film;
+  }
 }
 
