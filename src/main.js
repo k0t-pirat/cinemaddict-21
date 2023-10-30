@@ -5,6 +5,7 @@ import { RenderPosition, render } from './framework/render';
 import FilterPresenter from './presenter/filter-presenter';
 import FilterModel from './model/filter-model';
 import UserRankPresenter from './presenter/user-rank-presenter';
+import CommentModel from './model/comment-model';
 
 const headerContainer = document.querySelector('.header');
 const mainContainer = document.querySelector('.main');
@@ -15,7 +16,12 @@ const filterModel = new FilterModel();
 const filmModel = new FilmModel();
 filmModel.init();
 
-render(new FooterStatisticsView({filmModel}), footerContainer, RenderPosition.AFTERBEGIN);
+const commentModel = new CommentModel();
+commentModel.init();
+
+filmModel.handleLoad = () => {
+  render(new FooterStatisticsView({filmModel}), footerContainer, RenderPosition.AFTERBEGIN);
+};
 
 const userRankPresenter = new UserRankPresenter({container: headerContainer, filmModel});
 userRankPresenter.init();
@@ -23,5 +29,5 @@ userRankPresenter.init();
 const filterPresenter = new FilterPresenter({filterContainer: mainContainer, filterModel, filmModel});
 filterPresenter.init();
 
-const filmsListPresenter = new FilmsListPresenter({container: mainContainer, filmModel});
+const filmsListPresenter = new FilmsListPresenter({container: mainContainer, filmModel, commentModel});
 filmsListPresenter.init();

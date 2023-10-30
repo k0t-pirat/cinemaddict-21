@@ -28,15 +28,31 @@ const getDateDaysAgo = (num) => {
   return d;
 };
 
+const getDateMonthsAgo = (num) => {
+  const d = new Date();
+  d.setMonth(d.getMonth() - num);
+
+  return d;
+};
+
+const getDateMinutesAgo = (num) => {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - num);
+
+  return d;
+};
+
 const getMockDate = () => {
-  const value = getRandomInt(2);
+  const value = getRandomInt(3);
 
   switch (value) {
     case 0:
-      return new Date();
+      return getRandomBool() ? new Date() : getDateMinutesAgo(getRandomInt(0, 15));
     case 1:
-      return getDateDaysAgo(2);
+      return getRandomBool() ? getDateMinutesAgo(getRandomInt(15, 45)) : getDateMinutesAgo(getRandomInt(60, 3000));
     case 2:
+      return getRandomBool() ? getDateDaysAgo(getRandomInt(1, 30)) : getDateMonthsAgo(1, 9);
+    case 3:
       return getRandomDate('2019-05-11T16:12:32.554Z');
   }
 };

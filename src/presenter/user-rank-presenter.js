@@ -9,6 +9,10 @@ export default class UserRankPresenter {
   constructor({container, filmModel}) {
     this.#container = container;
     this.#filmModel = filmModel;
+
+    this.#filmModel.handleLoad = () => {
+      this.init();
+    };
   }
 
   get watchedFilmsCount() {

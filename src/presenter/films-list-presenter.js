@@ -8,6 +8,7 @@ import ShowMorePresenter from './show-more-presenter';
 import { updateItem } from '../util/common';
 import { SortType } from '../const';
 import { sortFilms } from '../util/sort';
+import LoaderView from '../view/loader-view';
 
 export default class FilmsListPresenter {
   #mainContainer = null;
@@ -15,6 +16,7 @@ export default class FilmsListPresenter {
   #filmsEmptyView = null;
   #filmsListView = null;
   #filmModel = null;
+  #commentModel = null;
   #films = [];
   #allComments = [];
   #showMorePresenter = null;
@@ -22,21 +24,42 @@ export default class FilmsListPresenter {
   #sortView = null;
   #activeSortType = SortType.DEFAULT;
   #defaultFilms = [];
+  #loaderView = new LoaderView();
 
-  constructor({container, filmModel}) {
+  constructor({container, filmModel, commentModel}) {
     this.#mainContainer = container;
     this.#filmsWrapperView = new FilmsWrapperView();
     this.#filmsEmptyView = new FilmsEmptyView();
     this.#filmsListView = new FilmsListView();
     this.#filmModel = filmModel;
+    this.#commentModel = commentModel;
+
+    this.#commentModel.callback = () => {
+      this.#update();
+    };
+    this.#filmModel.handleLoad = () => {
+      this.#update();
+    };
   }
 
   init() {
+    if (this.#filmModel.isLoading && this.#filmModel.isLoading) {
+      render(this.#loaderView, this.#mainContainer);
+      return;
+    }
     this.#films = [...this.#filmModel.films];
     this.#defaultFilms = [...this.#filmModel.films];
-    this.#allComments = [...this.#filmModel.comments];
+    this.#allComments = [...this.#commentModel.comments];
 
     this.#renderList();
+  }
+
+  #update() {
+    if (!(this.#filmModel.isLoading && this.#filmModel.isLoading)) {
+      remove(this.#loaderView);
+      this.#clearList();
+      this.init();
+    }
   }
 
   #renderGroup = ({currentCount, nextCount}) => {
@@ -72,7 +95,9 @@ export default class FilmsListPresenter {
   #clearList() {
     this.#filmPresenters.forEach((presenter) => presenter.destroy());
     this.#filmPresenters.clear();
-    this.#showMorePresenter.destroy();
+    if (this.#showMorePresenter) {
+      this.#showMorePresenter.destroy();
+    }
 
     remove(this.#filmsListView);
     remove(this.#filmsWrapperView);
