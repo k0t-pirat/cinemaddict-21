@@ -99,7 +99,7 @@ export default class FilmPresenter {
   }
 
   #closePopup() {
-    this.#filmPopupView.reset(this.#film);
+    this.#filmPopupView.reset();
     remove(this.#filmPopupView);
     document.body.classList.remove('hide-overflow');
     document.removeEventListener('keydown', this.#escKeydownHandler);

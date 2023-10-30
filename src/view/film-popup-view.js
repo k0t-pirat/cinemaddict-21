@@ -4,6 +4,11 @@ import { formatDate, formatDuration } from '../util/date';
 
 const EMOJIES = ['smile', 'sleeping', 'puke', 'angry'];
 
+const defaultState = {
+  currentEmoji: '',
+  text: '',
+};
+
 const getFilmComments = (commentIds, allComments) => {
   const filmComments = allComments.filter((comment) => commentIds.includes(comment.id));
   return filmComments;
@@ -39,11 +44,12 @@ const createEmojiesMarkup = (emojies, currentEmoji) =>
     </label>`
   )).join('');
 
-const createFilmPopupTemplate = (film, allComments) => {
-  const {filmInfo, userDetails, currentEmoji} = film;
+const createFilmPopupTemplate = (film, allComments, newComment) => {
+  const {filmInfo, userDetails} = film;
   const {poster, ageRating, title, altTitle, totalRating, director, writers, actors, release, duration, genres, description} = filmInfo;
   const {alreadyWatched, inWatchlist, isFavorite} = userDetails;
   const filmComments = getFilmComments(film.comments, allComments);
+  const {currentEmoji, text} = newComment;
 
   return (
     `<section class="film-details">
@@ -131,7 +137,7 @@ const createFilmPopupTemplate = (film, allComments) => {
               </div>
 
               <label class="film-details__comment-label">
-                <textarea class="film-details__comment-input" placeholder="Select reaction below and write comment here" name="comment"></textarea>
+                <textarea class="film-details__comment-input" placeholder="Select reaction below and write comment here" name="comment">${text}</textarea>
               </label>
 
               <div class="film-details__emoji-list">
@@ -146,40 +152,42 @@ const createFilmPopupTemplate = (film, allComments) => {
 };
 
 export default class FilmPopupView extends AbstractStatefulView {
+  #film = null;
   #allComments = [];
   #handleCloseButtonClick = null;
   #handleFilmStatusClick = null;
-  #prevScroll = 0;
 
   constructor({film, allComments, prevState, onCloseButtonClick, onFilmStatusClick}) {
     super();
+    this.#film = film;
     this.#allComments = allComments;
     this.#handleCloseButtonClick = onCloseButtonClick;
     this.#handleFilmStatusClick = onFilmStatusClick;
 
-    this._setState(FilmPopupView.parseFilmToState(film, prevState));
+    this._setState(prevState || defaultState);
   }
 
   get template() {
-    return createFilmPopupTemplate(this._state, this.#allComments);
+    return createFilmPopupTemplate(this.#film, this.#allComments, this._state);
   }
 
   init() {
     this._restoreHandlers();
   }
 
-  reset(film) {
-    this._setState(FilmPopupView.parseFilmToState(film));
+  reset() {
+    this._setState(defaultState);
   }
 
   getState() {
-    return {currentEmoji: this._state.currentEmoji};
+    return this._state;
   }
 
   _restoreHandlers() {
     this.element.querySelector('.film-details__close-btn').addEventListener('click', this.#closeButtonClickHandler);
     this.element.querySelector('.film-details__controls').addEventListener('click', this.#filmStatusClickHandler);
     this.element.querySelector('.film-details__emoji-list').addEventListener('change', this.#emojiChangeHandler);
+    this.element.querySelector('.film-details__comment-input').addEventListener('input', this.#commentTextChangeHandler);
   }
 
   #closeButtonClickHandler = () => {
@@ -195,34 +203,19 @@ export default class FilmPopupView extends AbstractStatefulView {
   };
 
   #emojiChangeHandler = (evt) => {
-    this.#prevScroll = this.element.scrollTop;
+    const prevScroll = this.element.scrollTop;
     this.updateElement({
       currentEmoji: evt.target.value,
     });
-    this.#setScroll();
+    this.element.scrollTo(0, prevScroll);
   };
 
-  #setScroll() {
-    this.element.scrollTo(0, this.#prevScroll);
-  }
-
-  static parseFilmToState(film, prevState) {
-    const defaultState = {
-      currentEmoji: '',
-    };
-
-    return {
-      ...film,
-      ...(prevState || defaultState),
-    };
-  }
-
-  static parseStateToFilm(state) {
-    const film = {...state};
-
-    delete film.currentEmoji;
-
-    return film;
-  }
+  #commentTextChangeHandler = (evt) => {
+    const prevScroll = this.element.scrollTop;
+    this._setState({
+      text: evt.target.value,
+    });
+    this.element.scrollTo(0, prevScroll);
+  };
 }
 

@@ -40,6 +40,7 @@ export default class FilmsListPresenter {
   }
 
   #renderGroup = ({currentCount, nextCount}) => {
+    this.#handleModeChange();
     for (const film of this.#films.slice(currentCount, nextCount)) {
       const filmPresenter = new FilmPresenter({
         allComments: this.#allComments,
