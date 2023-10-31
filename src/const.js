@@ -3,3 +3,9 @@ export const SortType = {
   DATE: 'date',
   RATING: 'rating',
 };
+
+export const UpdateType = {
+  INIT: 'INIT',
+  MAJOR: 'MAJOR',
+  PATCH: 'PATCH',
+};

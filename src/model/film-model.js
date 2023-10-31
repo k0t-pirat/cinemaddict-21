@@ -1,5 +1,7 @@
+import { UpdateType } from '../const';
 import Observable from '../framework/observable';
 import { getMockFilmsPromise } from '../mocks';
+import { updateItem } from '../util/common';
 
 export default class FilmModel extends Observable {
   #films = [];
@@ -16,11 +18,16 @@ export default class FilmModel extends Observable {
       .then((loadedFilms) => {
         this.#films = loadedFilms;
         this.#isLoading = false;
-        this._notify();
-      })
-      .catch(() => {
-        throw new Error('catch error in getMockFilmsPromise');
+        this._notify(UpdateType.INIT);
       });
+    // .catch(() => {
+    //   throw new Error('catch error in getMockFilmsPromise');
+    // });
+  }
+
+  updateFilm(updatedFilm) {
+    this.#films = updateItem(this.#films, updatedFilm);
+    this._notify(UpdateType.PATCH, updatedFilm);
   }
 
   get films() {

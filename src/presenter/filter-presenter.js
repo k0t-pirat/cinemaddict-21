@@ -1,5 +1,5 @@
 import { FilterType } from '../const/common';
-import { remove, render } from '../framework/render';
+import { RenderPosition, remove, render } from '../framework/render';
 import FilterView from '../view/fitler-view';
 
 const getFilmFilter = (films) => {
@@ -24,14 +24,6 @@ export default class FilterPresenter {
     this.#filterContainer = filterContainer;
     this.#filterModel = filterModel;
     this.#filmModel = filmModel;
-
-    this.#filmModel.addObserver(() => {
-      this.init();
-    });
-  }
-
-  get activeFilter() {
-    return this.#filterModel.activeFilter;
   }
 
   get countedFilter() {
@@ -39,8 +31,25 @@ export default class FilterPresenter {
   }
 
   init() {
+    this.#render();
+
+    this.#filmModel.addObserver(() => {
+      this.#render();
+    });
+    this.#filterModel.addObserver(() => {
+      this.#render();
+    });
+  }
+
+  #render() {
     remove(this.#filterView);
-    this.#filterView = new FilterView(this.countedFilter, this.activeFilter);
-    render(this.#filterView, this.#filterContainer);
+    this.#filterView = new FilterView(this.countedFilter, this.#filterModel.activeFilter, this.#handleFilterClick.bind(this));
+    render(this.#filterView, this.#filterContainer, RenderPosition.AFTERBEGIN);
+  }
+
+  #handleFilterClick(filter) {
+    if (this.#filterModel.activeFilter !== filter) {
+      this.#filterModel.activeFilter = filter;
+    }
   }
 }

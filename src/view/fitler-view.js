@@ -16,15 +16,29 @@ const createFilterTemplate = (countedFilter, activeFilter) => (
 export default class FilterView extends AbstractView {
   #countedFilter = null;
   #activeFilter = '';
+  #handleClick = null;
 
-  constructor(countedFilter, activeFilter) {
+  constructor(countedFilter, activeFilter, onClick) {
     super();
     this.#countedFilter = countedFilter;
     this.#activeFilter = activeFilter;
+    this.#handleClick = onClick;
+
+    this.element.addEventListener('click', this.#clickHandler.bind(this));
   }
 
   get template() {
     return createFilterTemplate(this.#countedFilter, this.#activeFilter);
+  }
+
+  #clickHandler(evt) {
+    const linkNode = evt.target && evt.target.closest('a');
+
+    if (linkNode) {
+      evt.preventDefault();
+      const filter = linkNode.hash.slice(1);
+      this.#handleClick(filter);
+    }
   }
 }
 

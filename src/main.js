@@ -6,6 +6,7 @@ import FilterPresenter from './presenter/filter-presenter';
 import FilterModel from './model/filter-model';
 import UserRankPresenter from './presenter/user-rank-presenter';
 import CommentModel from './model/comment-model';
+import { UpdateType } from './const';
 
 const headerContainer = document.querySelector('.header');
 const mainContainer = document.querySelector('.main');
@@ -19,8 +20,10 @@ filmModel.init();
 const commentModel = new CommentModel();
 commentModel.init();
 
-filmModel.addObserver(() => {
-  render(new FooterStatisticsView({filmModel}), footerContainer, RenderPosition.AFTERBEGIN);
+filmModel.addObserver((updateType) => {
+  if (updateType === UpdateType.INIT) {
+    render(new FooterStatisticsView({filmModel}), footerContainer, RenderPosition.AFTERBEGIN);
+  }
 });
 
 const userRankPresenter = new UserRankPresenter({container: headerContainer, filmModel});
@@ -29,5 +32,5 @@ userRankPresenter.init();
 const filterPresenter = new FilterPresenter({filterContainer: mainContainer, filterModel, filmModel});
 filterPresenter.init();
 
-const filmsListPresenter = new FilmsListPresenter({container: mainContainer, filmModel, commentModel});
+const filmsListPresenter = new FilmsListPresenter({container: mainContainer, filterModel, filmModel, commentModel});
 filmsListPresenter.init();
