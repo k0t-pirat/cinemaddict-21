@@ -17,7 +17,7 @@ const filterModel = new FilterModel();
 const filmModel = new FilmModel();
 filmModel.init();
 
-const commentModel = new CommentModel();
+const commentModel = new CommentModel(filmModel);
 commentModel.init();
 
 filmModel.addObserver((updateType) => {

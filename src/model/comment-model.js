@@ -1,12 +1,23 @@
 import { getMockCommentsPromise } from '../mocks';
+import Obervable from '../framework/observable';
+import { UpdateType } from '../const';
 
-export default class CommentModel {
+const getNewCommentId = (allComments) => {
+  const ids = allComments.map((comment) => comment.id);
+  const maxId = Math.max(...ids);
+  const nextId = Number.isFinite(maxId) ? maxId + 1 : 1;
+
+  return nextId;
+};
+
+export default class CommentModel extends Obervable {
   #comments = [];
-  #onLoad = null;
   #isLoading = false;
+  #filmModel = null;
 
-  constructor() {
-    this.#comments = [];
+  constructor(filmModel) {
+    super();
+    this.#filmModel = filmModel;
   }
 
   init() {
@@ -15,7 +26,7 @@ export default class CommentModel {
       .then((loadedComments) => {
         this.#comments = loadedComments;
         this.#isLoading = false;
-        this.onLoad();
+        this._notify(UpdateType.INIT);
       });
   }
 
@@ -27,11 +38,35 @@ export default class CommentModel {
     return this.#isLoading;
   }
 
-  get onLoad() {
-    return this.#onLoad;
+  deleteComment(id) {
+    const index = this.#comments.findIndex((comment) => comment.id === id);
+    if (index !== -1) {
+      this.#comments = [
+        ...this.#comments.slice(0, index),
+        ...this.#comments.slice(index + 1),
+      ];
+      const film = this.#filmModel.removeFilmComment(id);
+
+      if (film !== null) {
+        this._notify(UpdateType.PATCH, film);
+      }
+    }
   }
 
-  set onLoad(callback) {
-    this.#onLoad = callback;
+  addComment({newComment, film}) {
+    const newCommentId = getNewCommentId(this.#comments);
+    const addedComment = {
+      ...newComment,
+      id: newCommentId,
+      author: 'vasya',
+      date: new Date().toISOString(),
+    };
+
+    const currentFilm = this.#filmModel.addFilmComment(addedComment, film.id);
+
+    if (currentFilm !== null) {
+      this.#comments = [addedComment, ...this.#comments];
+      this._notify(UpdateType.PATCH, currentFilm);
+    }
   }
 }

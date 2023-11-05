@@ -16,7 +16,7 @@ const getFilmComments = (commentIds, allComments) => {
 
 const createCommentsMarkup = (filmComments) =>
   filmComments.map((comment) => {
-    const {emotion, comment: text, author, date} = comment;
+    const {emotion, comment: text, author, date, id} = comment;
 
     return (
       `<li class="film-details__comment">
@@ -28,7 +28,7 @@ const createCommentsMarkup = (filmComments) =>
           <p class="film-details__comment-info">
             <span class="film-details__comment-author">${author}</span>
             <span class="film-details__comment-day">${formatDate(date, DateType.USER)}</span>
-            <button class="film-details__comment-delete">Delete</button>
+            <button class="film-details__comment-delete" data-id=${id}>Delete</button>
           </p>
         </div>
       </li>`
@@ -156,13 +156,17 @@ export default class FilmPopupView extends AbstractStatefulView {
   #allComments = [];
   #handleCloseButtonClick = null;
   #handleFilmStatusClick = null;
+  #handleDeleteCommentClick = null;
+  #handleSubmitComment = null;
 
-  constructor({film, allComments, prevState, onCloseButtonClick, onFilmStatusClick}) {
+  constructor({film, allComments, prevState, onCloseButtonClick, onFilmStatusClick, onDeleteCommentClick, onSubmitComment}) {
     super();
     this.#film = film;
     this.#allComments = allComments;
     this.#handleCloseButtonClick = onCloseButtonClick;
     this.#handleFilmStatusClick = onFilmStatusClick;
+    this.#handleDeleteCommentClick = onDeleteCommentClick;
+    this.#handleSubmitComment = onSubmitComment;
 
     this._setState(prevState || defaultState);
   }
@@ -188,6 +192,8 @@ export default class FilmPopupView extends AbstractStatefulView {
     this.element.querySelector('.film-details__controls').addEventListener('click', this.#filmStatusClickHandler);
     this.element.querySelector('.film-details__emoji-list').addEventListener('change', this.#emojiChangeHandler);
     this.element.querySelector('.film-details__comment-input').addEventListener('input', this.#commentTextChangeHandler);
+    this.element.querySelector('.film-details__comments-list').addEventListener('click', this.#commentDeleteClickHandler);
+    this.element.querySelector('.film-details__comment-input').addEventListener('keydown', this.#submitCommentHandler);
   }
 
   #closeButtonClickHandler = () => {
@@ -216,6 +222,21 @@ export default class FilmPopupView extends AbstractStatefulView {
       text: evt.target.value,
     });
     this.element.scrollTo(0, prevScroll);
+  };
+
+  #commentDeleteClickHandler = (evt) => {
+    if (evt.target.dataset.id) {
+      this.#handleDeleteCommentClick(Number(evt.target.dataset.id));
+    }
+  };
+
+  #submitCommentHandler = (evt) => {
+    if (evt.key === 'Enter' && evt.ctrlKey) {
+      const newComment = {comment: this._state.text, emotion: this._state.currentEmoji};
+      if (newComment.emotion && newComment.comment) {
+        this.#handleSubmitComment(newComment);
+      }
+    }
   };
 }
 

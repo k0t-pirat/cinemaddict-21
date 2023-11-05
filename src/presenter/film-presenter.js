@@ -1,3 +1,4 @@
+import { UserAction } from '../const';
 import { remove, render, replace } from '../framework/render';
 import { replaceWithScroll } from '../util/common';
 import FilmCardView from '../view/film-card-view';
@@ -23,17 +24,22 @@ export default class FilmPresenter {
   #mode = Mode.DEFAULT;
   #handleModeChange = null;
   #handleDataChange = null;
+  #handleCommentChange = null;
 
-  constructor({ allComments, filmsContainer, onModeChange, onDataChange}) {
+  constructor({ allComments, filmsContainer, onModeChange, onDataChange, onCommentChange}) {
     this.#allComments = allComments;
     this.#filmsContainer = filmsContainer;
     this.#handleModeChange = onModeChange;
     this.#handleDataChange = onDataChange;
+    this.#handleCommentChange = onCommentChange;
   }
 
-  init(film) {
+  init(film, comments) {
+    if (comments) {
+      this.#allComments = comments;
+    }
     this.#film = film;
-    this.#renderFilm(this.#film);
+    this.#renderFilm(this.#film, Boolean(comments));
   }
 
   destroy() {
@@ -47,10 +53,10 @@ export default class FilmPresenter {
     }
   }
 
-  #renderFilm(film) {
+  #renderFilm(film, isDefaultState) {
     const prevFilmCardView = this.#filmCardView;
     const prevFilmPopupView = this.#filmPopupView;
-    const prevFilmState = prevFilmPopupView?.getState();
+    const prevFilmState = !isDefaultState ? prevFilmPopupView?.getState() : null;
 
     this.#filmCardView = new FilmCardView({
       film,
@@ -67,6 +73,8 @@ export default class FilmPresenter {
         this.#closePopup();
       },
       onFilmStatusClick: this.#handleFilmStatusClick,
+      onDeleteFilmClick: this.#handleDeleteFilmClick,
+      onSubmitComment: this.#handleSubmitComment,
     });
 
     if (prevFilmCardView === null || prevFilmPopupView === null) {
@@ -112,5 +120,13 @@ export default class FilmPresenter {
       ...this.#film,
       userDetails: {...this.#film.userDetails, [translatedStatus]: !this.#film.userDetails[translatedStatus]},
     });
+  };
+
+  #handleDeleteFilmClick = (id) => {
+    this.#handleCommentChange(id, UserAction.DELETE);
+  };
+
+  #handleSubmitComment = (newComment) => {
+    this.#handleCommentChange({newComment, film: this.#film}, UserAction.ADD);
   };
 }

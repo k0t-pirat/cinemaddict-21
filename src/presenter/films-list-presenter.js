@@ -5,7 +5,7 @@ import FilmsEmptyView from '../view/films-empty-view';
 import FilmsWrapperView from '../view/films-wrapper-view';
 import FilmPresenter from './film-presenter';
 import ShowMorePresenter from './show-more-presenter';
-import { SortType, UpdateType } from '../const';
+import { SortType, UpdateType, UserAction } from '../const';
 import { sortFilms } from '../util/sort';
 import LoaderView from '../view/loader-view';
 import { filterFilms } from '../util/common';
@@ -39,9 +39,17 @@ export default class FilmsListPresenter {
   init() {
     this.#renderAll();
 
-    this.#commentModel.onLoad = () => {
-      this.#handleDataLoad();
-    };
+    this.#commentModel.addObserver((updateType, update) => {
+      switch (updateType) {
+        case UpdateType.INIT:
+          this.#handleDataLoad();
+          break;
+        case UpdateType.PATCH:
+          this.#films = this.#filteredFilms;
+          this.#filmPresenters.get(update.id).init(update, this.#commentModel.comments);
+          break;
+      }
+    });
     this.#filmModel.addObserver((updateType, update) => {
       switch (updateType) {
         case UpdateType.INIT:
@@ -80,6 +88,7 @@ export default class FilmsListPresenter {
         filmsContainer: this.#filmsListView.filmsContainer,
         onModeChange: this.#handleModeChange,
         onDataChange: this.#handleFilmChange,
+        onCommentChange: this.#handleCommentChange,
       });
       filmPresenter.init(film);
       this.#filmPresenters.set(film.id, filmPresenter);
@@ -147,6 +156,14 @@ export default class FilmsListPresenter {
 
   #handleFilmChange = (updatedFilm) => {
     this.#filmModel.updateFilm(updatedFilm);
+  };
+
+  #handleCommentChange = (payload, userAction) => {
+    if (userAction === UserAction.DELETE) {
+      this.#commentModel.deleteComment(payload);
+    } else if (userAction === UserAction.ADD) {
+      this.#commentModel.addComment(payload);
+    }
   };
 
   #handleSortChange = (sortType) => {

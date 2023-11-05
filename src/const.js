@@ -9,3 +9,9 @@ export const UpdateType = {
   MAJOR: 'MAJOR',
   PATCH: 'PATCH',
 };
+
+export const UserAction = {
+  EDIT: 'EDIT',
+  ADD: 'ADD',
+  DELETE: 'DELETE',
+};
