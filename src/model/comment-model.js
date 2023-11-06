@@ -10,6 +10,16 @@ const getNewCommentId = (allComments) => {
   return nextId;
 };
 
+const getNewComment = (userComment, allComments) => {
+  const newCommentId = getNewCommentId(allComments);
+  return {
+    ...userComment,
+    id: newCommentId,
+    author: 'vasya',
+    date: new Date().toISOString(),
+  };
+};
+
 export default class CommentModel extends Obervable {
   #comments = [];
   #isLoading = false;
@@ -38,35 +48,26 @@ export default class CommentModel extends Obervable {
     return this.#isLoading;
   }
 
-  deleteComment(id) {
-    const index = this.#comments.findIndex((comment) => comment.id === id);
-    if (index !== -1) {
-      this.#comments = [
-        ...this.#comments.slice(0, index),
-        ...this.#comments.slice(index + 1),
-      ];
-      const film = this.#filmModel.removeFilmComment(id);
+  deleteComment({commentId, film}) {
+    const commentIndex = this.#comments.findIndex((comment) => comment.id === commentId);
+    const updatedFilm = this.#filmModel.removeFilmComment(commentId, film);
 
-      if (film !== null) {
-        this._notify(UpdateType.PATCH, film);
-      }
+    if (updatedFilm !== null) {
+      this.#comments = [
+        ...this.#comments.slice(0, commentIndex),
+        ...this.#comments.slice(commentIndex + 1),
+      ];
+      this._notify(UpdateType.PATCH, updatedFilm);
     }
   }
 
-  addComment({newComment, film}) {
-    const newCommentId = getNewCommentId(this.#comments);
-    const addedComment = {
-      ...newComment,
-      id: newCommentId,
-      author: 'vasya',
-      date: new Date().toISOString(),
-    };
+  addComment({userComment, film}) {
+    const newComment = getNewComment(userComment, this.#comments);
+    const updatedFilm = this.#filmModel.addFilmComment(newComment, film);
 
-    const currentFilm = this.#filmModel.addFilmComment(addedComment, film.id);
-
-    if (currentFilm !== null) {
-      this.#comments = [addedComment, ...this.#comments];
-      this._notify(UpdateType.PATCH, currentFilm);
+    if (updatedFilm !== null) {
+      this.#comments = [newComment, ...this.#comments];
+      this._notify(UpdateType.PATCH, updatedFilm);
     }
   }
 }

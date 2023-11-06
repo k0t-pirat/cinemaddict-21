@@ -1,3 +1,4 @@
+import he from 'he';
 import { DateType } from '../const/date';
 import AbstractStatefulView from '../framework/view/abstract-stateful-view';
 import { formatDate, formatDuration } from '../util/date';
@@ -24,9 +25,9 @@ const createCommentsMarkup = (filmComments) =>
           <img src="./images/emoji/${emotion}.png" width="55" height="55" alt="emoji-${emotion}">
         </span>
         <div>
-          <p class="film-details__comment-text">${text}</p>
+          <p class="film-details__comment-text">${he.encode(text)}</p>
           <p class="film-details__comment-info">
-            <span class="film-details__comment-author">${author}</span>
+            <span class="film-details__comment-author">${he.encode(author)}</span>
             <span class="film-details__comment-day">${formatDate(date, DateType.USER)}</span>
             <button class="film-details__comment-delete" data-id=${id}>Delete</button>
           </p>
@@ -232,9 +233,9 @@ export default class FilmPopupView extends AbstractStatefulView {
 
   #submitCommentHandler = (evt) => {
     if (evt.key === 'Enter' && evt.ctrlKey) {
-      const newComment = {comment: this._state.text, emotion: this._state.currentEmoji};
-      if (newComment.emotion && newComment.comment) {
-        this.#handleSubmitComment(newComment);
+      const userComment = {comment: this._state.text, emotion: this._state.currentEmoji};
+      if (userComment.emotion && userComment.comment) {
+        this.#handleSubmitComment(userComment);
       }
     }
   };

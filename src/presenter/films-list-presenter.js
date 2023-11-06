@@ -20,7 +20,6 @@ export default class FilmsListPresenter {
   #filmModel = null;
   #commentModel = null;
   #films = [];
-  #allComments = [];
   #showMorePresenter = null;
   #filmPresenters = new Map();
   #sortView = null;
@@ -80,11 +79,15 @@ export default class FilmsListPresenter {
     return filterFilms[this.#filterModel.activeFilter](this.#modelFilms);
   }
 
+  get #modelComments() {
+    return [...this.#commentModel.comments];
+  }
+
   #renderGroup = ({currentCount, nextCount}) => {
     this.#handleModeChange();
     for (const film of this.#films.slice(currentCount, nextCount)) {
       const filmPresenter = new FilmPresenter({
-        allComments: this.#allComments,
+        allComments: this.#modelComments,
         filmsContainer: this.#filmsListView.filmsContainer,
         onModeChange: this.#handleModeChange,
         onDataChange: this.#handleFilmChange,
@@ -137,7 +140,6 @@ export default class FilmsListPresenter {
       return;
     }
     this.#films = this.#filteredFilms;
-    this.#allComments = [...this.#commentModel.comments];
 
     this.#renderList();
   }

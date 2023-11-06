@@ -12,6 +12,27 @@ export default class FilmModel extends Observable {
     this.#films = [];
   }
 
+  get films() {
+    return this.#films;
+  }
+
+  get isLoading() {
+    return this.#isLoading;
+  }
+
+  #updateFilmComments(film, updatedComments) {
+    const filmIndex = this.#films.findIndex((nextFilm) => nextFilm.id === film.id);
+
+    if (filmIndex !== -1) {
+      const updatedFilm = {...film, comments: updatedComments};
+      this.#films = updateItem(this.#films, updatedFilm);
+
+      return updatedFilm;
+    }
+
+    return null;
+  }
+
   init() {
     this.#isLoading = true;
     getMockFilmsPromise()
@@ -30,56 +51,19 @@ export default class FilmModel extends Observable {
     this._notify(UpdateType.PATCH, updatedFilm);
   }
 
-  get films() {
-    return this.#films;
+  removeFilmComment(commentId, film) {
+    const commentIndex = film.comments.findIndex((id) => id === commentId);
+    const filmComments = [
+      ...film.comments.slice(0, commentIndex),
+      ...film.comments.slice(commentIndex + 1),
+    ];
+
+    return this.#updateFilmComments(film, filmComments);
   }
 
-  get isLoading() {
-    return this.#isLoading;
-  }
+  addFilmComment(addedComment, film) {
+    const filmComments = [addedComment.id, ...film.comments];
 
-  removeFilmComment(commentId) {
-    const currentFilmIndex = this.#films.findIndex((film) => film.comments.includes(commentId));
-    const currentFilm = this.#films[currentFilmIndex];
-
-    if (currentFilm) {
-      const commentIndex = currentFilm.comments.findIndex((id) => id === commentId);
-      if (commentIndex !== -1) {
-        currentFilm.comments = [
-          ...currentFilm.comments.slice(0, commentIndex),
-          ...currentFilm.comments.slice(commentIndex + 1),
-        ];
-        this.#films = [
-          ...this.#films.slice(0, currentFilmIndex),
-          currentFilm,
-          ...this.#films.slice(currentFilmIndex + 1),
-        ];
-
-        return currentFilm;
-      }
-    }
-
-    return null;
-  }
-
-  addFilmComment(addedComment, filmId) {
-    const currentFilmIndex = this.#films.findIndex((film) => film.id === filmId);
-    const currentFilm = this.#films[currentFilmIndex];
-
-    if (currentFilm) {
-      currentFilm.comments = [
-        ...currentFilm.comments.slice(),
-        addedComment.id,
-      ];
-      this.#films = [
-        ...this.#films.slice(0, currentFilmIndex),
-        currentFilm,
-        ...this.#films.slice(currentFilmIndex + 1),
-      ];
-
-      return currentFilm;
-    }
-
-    return null;
+    return this.#updateFilmComments(film, filmComments);
   }
 }

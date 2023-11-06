@@ -73,7 +73,7 @@ export default class FilmPresenter {
         this.#closePopup();
       },
       onFilmStatusClick: this.#handleFilmStatusClick,
-      onDeleteFilmClick: this.#handleDeleteFilmClick,
+      onDeleteCommentClick: this.#handleDeleteCommentClick,
       onSubmitComment: this.#handleSubmitComment,
     });
 
@@ -122,11 +122,11 @@ export default class FilmPresenter {
     });
   };
 
-  #handleDeleteFilmClick = (id) => {
-    this.#handleCommentChange(id, UserAction.DELETE);
+  #handleDeleteCommentClick = (id) => {
+    this.#handleCommentChange({commentId: id, film: this.#film}, UserAction.DELETE);
   };
 
-  #handleSubmitComment = (newComment) => {
-    this.#handleCommentChange({newComment, film: this.#film}, UserAction.ADD);
+  #handleSubmitComment = (userComment) => {
+    this.#handleCommentChange({userComment, film: this.#film}, UserAction.ADD);
   };
 }
