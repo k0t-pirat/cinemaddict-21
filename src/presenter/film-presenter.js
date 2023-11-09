@@ -1,4 +1,4 @@
-import { UserAction } from '../const';
+import { UpdateType, UserAction } from '../const';
 import { remove, render, replace } from '../framework/render';
 import { replaceWithScroll } from '../util/common';
 import FilmCardView from '../view/film-card-view';
@@ -16,7 +16,6 @@ const statusTranslation = {
 
 export default class FilmPresenter {
   #film = null;
-  #allComments = [];
   #filmsContainer = null;
 
   #filmCardView = null;
@@ -25,21 +24,19 @@ export default class FilmPresenter {
   #handleModeChange = null;
   #handleDataChange = null;
   #handleCommentChange = null;
+  #commentModel = null;
 
-  constructor({ allComments, filmsContainer, onModeChange, onDataChange, onCommentChange}) {
-    this.#allComments = allComments;
+  constructor({ commentModel, filmsContainer, onModeChange, onDataChange, onCommentChange}) {
+    this.#commentModel = commentModel;
     this.#filmsContainer = filmsContainer;
     this.#handleModeChange = onModeChange;
     this.#handleDataChange = onDataChange;
     this.#handleCommentChange = onCommentChange;
   }
 
-  init(film, comments) {
-    if (comments) {
-      this.#allComments = comments;
-    }
+  init(film) {
     this.#film = film;
-    this.#renderFilm(this.#film, Boolean(comments));
+    this.#renderFilm(this.#film);
   }
 
   destroy() {
@@ -53,21 +50,43 @@ export default class FilmPresenter {
     }
   }
 
-  #renderFilm(film, isDefaultState) {
+  #handleCommentsLoad(comments) {
+    this.#filmPopupView.updateComments(comments, this.#commentModel.isLoading);
+  }
+
+  #observeCommentModel = (updateType, update) => {
+    switch (updateType) {
+      case UpdateType.INIT:
+        this.#handleCommentsLoad(update);
+        break;
+      // case UpdateType.PATCH:
+      //   this.#films = this.#filteredFilms;
+      //   this.#filmPresenters.get(update.id).init(update, this.#commentModel.comments);
+      //   break;
+    }
+  };
+
+  #initCommentModel() {
+    this.#commentModel.init(this.#film.id);
+    this.#commentModel.addObserver(this.#observeCommentModel);
+  }
+
+  #renderFilm(film) {
     const prevFilmCardView = this.#filmCardView;
     const prevFilmPopupView = this.#filmPopupView;
-    const prevFilmState = !isDefaultState ? prevFilmPopupView?.getState() : null;
+    const prevFilmState = prevFilmPopupView?.getState();
 
     this.#filmCardView = new FilmCardView({
       film,
       onLinkClick: () => {
-        this.#openPopup();
+        if (this.#mode !== Mode.EDITING) {
+          this.#openPopup();
+        }
       },
       onFilmStatusClick: this.#handleFilmStatusClick,
     });
     this.#filmPopupView = new FilmPopupView({
       film,
-      allComments: this.#allComments,
       prevState: prevFilmState,
       onCloseButtonClick: () => {
         this.#closePopup();
@@ -98,6 +117,7 @@ export default class FilmPresenter {
   };
 
   #openPopup() {
+    this.#initCommentModel();
     this.#handleModeChange();
     render(this.#filmPopupView, document.body);
     this.#filmPopupView.init();
@@ -107,6 +127,7 @@ export default class FilmPresenter {
   }
 
   #closePopup() {
+    this.#commentModel.removeObserver(this.#observeCommentModel);
     this.#filmPopupView.reset();
     remove(this.#filmPopupView);
     document.body.classList.remove('hide-overflow');

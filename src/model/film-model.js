@@ -1,15 +1,16 @@
 import { UpdateType } from '../const';
 import Observable from '../framework/observable';
-import { getMockFilmsPromise } from '../mocks';
 import { updateItem } from '../util/common';
 
 export default class FilmModel extends Observable {
   #films = [];
   #isLoading = false;
+  #filmsApiService = null;
 
-  constructor() {
+  constructor({filmsApiService}) {
     super();
     this.#films = [];
+    this.#filmsApiService = filmsApiService;
   }
 
   get films() {
@@ -33,17 +34,17 @@ export default class FilmModel extends Observable {
     return null;
   }
 
-  init() {
+  async init() {
     this.#isLoading = true;
-    getMockFilmsPromise()
-      .then((loadedFilms) => {
-        this.#films = loadedFilms;
-        this.#isLoading = false;
-        this._notify(UpdateType.INIT);
-      });
-    // .catch(() => {
-    //   throw new Error('catch error in getMockFilmsPromise');
-    // });
+    try {
+      const films = await this.#filmsApiService.films;
+      this.#films = films;
+    } catch {
+      this.#films = [];
+    } finally {
+      this.#isLoading = false;
+      this._notify(UpdateType.INIT);
+    }
   }
 
   updateFilm(updatedFilm) {

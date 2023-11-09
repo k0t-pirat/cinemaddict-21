@@ -7,6 +7,11 @@ import FilterModel from './model/filter-model';
 import UserRankPresenter from './presenter/user-rank-presenter';
 import CommentModel from './model/comment-model';
 import { UpdateType } from './const';
+import FilmsApiService from './films-api-service';
+import CommentsApiService from './comments-api-service';
+
+const AUTHORIZATION = 'Basic aaaab';
+const END_POINT = 'https://21.objects.pages.academy/cinemaddict';
 
 const headerContainer = document.querySelector('.header');
 const mainContainer = document.querySelector('.main');
@@ -14,11 +19,15 @@ const footerContainer = document.querySelector('.footer__statistics');
 
 const filterModel = new FilterModel();
 
-const filmModel = new FilmModel();
+const filmModel = new FilmModel({
+  filmsApiService: new FilmsApiService(END_POINT, AUTHORIZATION),
+});
 filmModel.init();
 
-const commentModel = new CommentModel(filmModel);
-commentModel.init();
+const commentModel = new CommentModel({
+  filmModel,
+  commentsApiService: new CommentsApiService(END_POINT, AUTHORIZATION),
+});
 
 filmModel.addObserver((updateType) => {
   if (updateType === UpdateType.INIT) {

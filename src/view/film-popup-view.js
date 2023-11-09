@@ -8,11 +8,8 @@ const EMOJIES = ['smile', 'sleeping', 'puke', 'angry'];
 const defaultState = {
   currentEmoji: '',
   text: '',
-};
-
-const getFilmComments = (commentIds, allComments) => {
-  const filmComments = allComments.filter((comment) => commentIds.includes(comment.id));
-  return filmComments;
+  comments: [],
+  areCommentsLoading: true,
 };
 
 const createCommentsMarkup = (filmComments) =>
@@ -45,12 +42,11 @@ const createEmojiesMarkup = (emojies, currentEmoji) =>
     </label>`
   )).join('');
 
-const createFilmPopupTemplate = (film, allComments, newComment) => {
+const createFilmPopupTemplate = (film, state) => {
   const {filmInfo, userDetails} = film;
   const {poster, ageRating, title, altTitle, totalRating, director, writers, actors, release, duration, genres, description} = filmInfo;
   const {alreadyWatched, inWatchlist, isFavorite} = userDetails;
-  const filmComments = getFilmComments(film.comments, allComments);
-  const {currentEmoji, text} = newComment;
+  const {currentEmoji, text, comments, areCommentsLoading} = state;
 
   return (
     `<section class="film-details">
@@ -126,11 +122,15 @@ const createFilmPopupTemplate = (film, allComments, newComment) => {
 
         <div class="film-details__bottom-container">
           <section class="film-details__comments-wrap">
-            <h3 class="film-details__comments-title">Comments <span class="film-details__comments-count">${filmComments.length}</span></h3>
 
-            <ul class="film-details__comments-list">
-              ${createCommentsMarkup(filmComments)}
-            </ul>
+    ${areCommentsLoading ?
+      '<h3 class="film-details__comments-title">Comments loading...</h3>'
+      :
+      `<h3 class="film-details__comments-title">Comments <span class="film-details__comments-count">${comments.length}</span></h3>
+      <ul class="film-details__comments-list">
+        ${createCommentsMarkup(comments)}
+      </ul>`
+    }    
 
             <form class="film-details__new-comment" action="" method="get">
               <div class="film-details__add-emoji-label">
@@ -154,16 +154,14 @@ const createFilmPopupTemplate = (film, allComments, newComment) => {
 
 export default class FilmPopupView extends AbstractStatefulView {
   #film = null;
-  #allComments = [];
   #handleCloseButtonClick = null;
   #handleFilmStatusClick = null;
   #handleDeleteCommentClick = null;
   #handleSubmitComment = null;
 
-  constructor({film, allComments, prevState, onCloseButtonClick, onFilmStatusClick, onDeleteCommentClick, onSubmitComment}) {
+  constructor({film, prevState, onCloseButtonClick, onFilmStatusClick, onDeleteCommentClick, onSubmitComment}) {
     super();
     this.#film = film;
-    this.#allComments = allComments;
     this.#handleCloseButtonClick = onCloseButtonClick;
     this.#handleFilmStatusClick = onFilmStatusClick;
     this.#handleDeleteCommentClick = onDeleteCommentClick;
@@ -173,7 +171,7 @@ export default class FilmPopupView extends AbstractStatefulView {
   }
 
   get template() {
-    return createFilmPopupTemplate(this.#film, this.#allComments, this._state);
+    return createFilmPopupTemplate(this.#film, this._state);
   }
 
   init() {
@@ -188,12 +186,19 @@ export default class FilmPopupView extends AbstractStatefulView {
     return this._state;
   }
 
+  updateComments(comments, areCommentsLoading) {
+    this.updateElement({
+      comments,
+      areCommentsLoading,
+    });
+  }
+
   _restoreHandlers() {
     this.element.querySelector('.film-details__close-btn').addEventListener('click', this.#closeButtonClickHandler);
     this.element.querySelector('.film-details__controls').addEventListener('click', this.#filmStatusClickHandler);
     this.element.querySelector('.film-details__emoji-list').addEventListener('change', this.#emojiChangeHandler);
     this.element.querySelector('.film-details__comment-input').addEventListener('input', this.#commentTextChangeHandler);
-    this.element.querySelector('.film-details__comments-list').addEventListener('click', this.#commentDeleteClickHandler);
+    this.element.querySelector('.film-details__comments-list')?.addEventListener('click', this.#commentDeleteClickHandler);
     this.element.querySelector('.film-details__comment-input').addEventListener('keydown', this.#submitCommentHandler);
   }
 

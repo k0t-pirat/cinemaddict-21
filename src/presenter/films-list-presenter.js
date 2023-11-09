@@ -37,18 +37,6 @@ export default class FilmsListPresenter {
 
   init() {
     this.#renderAll();
-
-    this.#commentModel.addObserver((updateType, update) => {
-      switch (updateType) {
-        case UpdateType.INIT:
-          this.#handleDataLoad();
-          break;
-        case UpdateType.PATCH:
-          this.#films = this.#filteredFilms;
-          this.#filmPresenters.get(update.id).init(update, this.#commentModel.comments);
-          break;
-      }
-    });
     this.#filmModel.addObserver((updateType, update) => {
       switch (updateType) {
         case UpdateType.INIT:
@@ -79,15 +67,11 @@ export default class FilmsListPresenter {
     return filterFilms[this.#filterModel.activeFilter](this.#modelFilms);
   }
 
-  get #modelComments() {
-    return [...this.#commentModel.comments];
-  }
-
   #renderGroup = ({currentCount, nextCount}) => {
     this.#handleModeChange();
     for (const film of this.#films.slice(currentCount, nextCount)) {
       const filmPresenter = new FilmPresenter({
-        allComments: this.#modelComments,
+        commentModel: this.#commentModel,
         filmsContainer: this.#filmsListView.filmsContainer,
         onModeChange: this.#handleModeChange,
         onDataChange: this.#handleFilmChange,
@@ -135,7 +119,7 @@ export default class FilmsListPresenter {
   }
 
   #renderAll() {
-    if (this.#filmModel.isLoading || this.#filmModel.isLoading) {
+    if (this.#filmModel.isLoading) {
       render(this.#loaderView, this.#mainContainer);
       return;
     }
@@ -145,7 +129,7 @@ export default class FilmsListPresenter {
   }
 
   #handleDataLoad() {
-    if (!(this.#commentModel.isLoading || this.#filmModel.isLoading)) {
+    if (!this.#filmModel.isLoading) {
       remove(this.#loaderView);
       this.#clearList();
       this.#renderAll();
