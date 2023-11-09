@@ -1,31 +1,11 @@
-// import { getMockCommentsPromise } from '../mocks';
 import Obervable from '../framework/observable';
 import { UpdateType } from '../const';
-
-// const getNewCommentId = (allComments) => {
-//   const ids = allComments.map((comment) => comment.id);
-//   const maxId = Math.max(...ids);
-//   const nextId = Number.isFinite(maxId) ? maxId + 1 : 1;
-
-//   return nextId;
-// };
-
-// const getNewComment = (userComment, allComments) => {
-//   const newCommentId = getNewCommentId(allComments);
-//   return {
-//     ...userComment,
-//     id: newCommentId,
-//     author: 'vasya',
-//     date: new Date().toISOString(),
-//   };
-// };
 
 export default class CommentModel extends Obervable {
   #comments = [];
   #isLoading = false;
   #filmModel = null;
   #commentsApiService = null;
-  #filmId = null;
 
   constructor({filmModel, commentsApiService}) {
     super();
@@ -34,7 +14,6 @@ export default class CommentModel extends Obervable {
   }
 
   async init(filmId) {
-    this.#filmId = filmId;
     this.#isLoading = true;
     try {
       const comments = await this.#commentsApiService.getCommentsByFilmId(filmId);
@@ -47,6 +26,40 @@ export default class CommentModel extends Obervable {
     }
   }
 
+  async addComment({userComment, film}) {
+    try {
+      const response = await this.#commentsApiService.addComment(userComment, film);
+      const updatedFilm = this.#filmModel.addFilmComment(response.film);
+      if (updatedFilm !== null) {
+        this.#comments = response.comments;
+        this._notify(UpdateType.PATCH, updatedFilm);
+      }
+    } catch {
+      throw new Error('Can\'t add film comment');
+    }
+  }
+
+  async deleteComment({commentId, film}) {
+    try {
+      const response = await this.#commentsApiService.deleteComment(commentId);
+
+      if (response) {
+        const commentIndex = this.#comments.findIndex((comment) => comment.id === commentId);
+        const updatedFilm = this.#filmModel.removeFilmComment(commentId, film);
+
+        if (updatedFilm !== null) {
+          this.#comments = [
+            ...this.#comments.slice(0, commentIndex),
+            ...this.#comments.slice(commentIndex + 1),
+          ];
+          this._notify(UpdateType.PATCH, updatedFilm);
+        }
+      }
+    } catch {
+      throw new Error('Can\'t delete film comment');
+    }
+  }
+
   get comments() {
     return this.#comments;
   }
@@ -54,35 +67,4 @@ export default class CommentModel extends Obervable {
   get isLoading() {
     return this.#isLoading;
   }
-
-  deleteComment() {
-    return null;
-  }
-
-  addComment() {
-    return null;
-  }
-
-  // deleteComment({commentId, film}) {
-  //   const commentIndex = this.#comments.findIndex((comment) => comment.id === commentId);
-  //   const updatedFilm = this.#filmModel.removeFilmComment(commentId, film);
-
-  //   if (updatedFilm !== null) {
-  //     this.#comments = [
-  //       ...this.#comments.slice(0, commentIndex),
-  //       ...this.#comments.slice(commentIndex + 1),
-  //     ];
-  //     this._notify(UpdateType.PATCH, updatedFilm);
-  //   }
-  // }
-
-  // addComment({userComment, film}) {
-  //   const newComment = getNewComment(userComment, this.#comments);
-  //   const updatedFilm = this.#filmModel.addFilmComment(newComment, film);
-
-  //   if (updatedFilm !== null) {
-  //     this.#comments = [newComment, ...this.#comments];
-  //     this._notify(UpdateType.PATCH, updatedFilm);
-  //   }
-  // }
 }

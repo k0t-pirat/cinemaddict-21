@@ -187,10 +187,14 @@ export default class FilmPopupView extends AbstractStatefulView {
   }
 
   updateComments(comments, areCommentsLoading) {
+    const prevScroll = this.element.scrollTop;
     this.updateElement({
       comments,
       areCommentsLoading,
+      currentEmoji: '',
+      text: '',
     });
+    this.element.scrollTo(0, prevScroll);
   }
 
   _restoreHandlers() {
@@ -232,7 +236,7 @@ export default class FilmPopupView extends AbstractStatefulView {
 
   #commentDeleteClickHandler = (evt) => {
     if (evt.target.dataset.id) {
-      this.#handleDeleteCommentClick(Number(evt.target.dataset.id));
+      this.#handleDeleteCommentClick(evt.target.dataset.id);
     }
   };
 

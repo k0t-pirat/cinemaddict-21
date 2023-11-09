@@ -59,10 +59,10 @@ export default class FilmPresenter {
       case UpdateType.INIT:
         this.#handleCommentsLoad(update);
         break;
-      // case UpdateType.PATCH:
-      //   this.#films = this.#filteredFilms;
-      //   this.#filmPresenters.get(update.id).init(update, this.#commentModel.comments);
-      //   break;
+      case UpdateType.PATCH:
+        this.init(update);
+        this.#filmPopupView.updateComments(this.#commentModel.comments, false);
+        break;
     }
   };
 

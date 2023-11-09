@@ -67,9 +67,7 @@ export default class FilmModel extends Observable {
     return this.#updateFilmComments(film, filmComments);
   }
 
-  addFilmComment(addedComment, film) {
-    const filmComments = [addedComment.id, ...film.comments];
-
-    return this.#updateFilmComments(film, filmComments);
+  addFilmComment(film) {
+    return this.#updateFilmComments(film, film.comments);
   }
 }
