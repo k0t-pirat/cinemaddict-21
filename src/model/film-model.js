@@ -47,9 +47,14 @@ export default class FilmModel extends Observable {
     }
   }
 
-  updateFilm(updatedFilm) {
-    this.#films = updateItem(this.#films, updatedFilm);
-    this._notify(UpdateType.PATCH, updatedFilm);
+  async updateFilm(updatedFilm) {
+    try {
+      const response = await this.#filmsApiService.updateFilm(updatedFilm);
+      this.#films = updateItem(this.#films, response);
+      this._notify(UpdateType.PATCH, response);
+    } catch {
+      throw new Error('Can\'t update film');
+    }
   }
 
   removeFilmComment(commentId, film) {
