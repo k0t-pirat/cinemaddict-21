@@ -10,11 +10,14 @@ const defaultState = {
   text: '',
   comments: [],
   areCommentsLoading: true,
+  isDeleting: false,
+  isUploading: false,
 };
 
-const createCommentsMarkup = (filmComments) =>
+const createCommentsMarkup = (filmComments, isDeleting, deletedId) =>
   filmComments.map((comment) => {
     const {emotion, comment: text, author, date, id} = comment;
+    const isCurrentCommentDeleting = isDeleting && deletedId === id;
 
     return (
       `<li class="film-details__comment">
@@ -26,7 +29,9 @@ const createCommentsMarkup = (filmComments) =>
           <p class="film-details__comment-info">
             <span class="film-details__comment-author">${he.encode(author)}</span>
             <span class="film-details__comment-day">${formatDate(date, DateType.USER)}</span>
-            <button class="film-details__comment-delete" data-id=${id}>Delete</button>
+            <button class="film-details__comment-delete" data-id=${id} ${isDeleting ? 'disabled="disabled"' : ''}>
+              ${isCurrentCommentDeleting ? 'Deleting...' : 'Delete'}
+              </button>
           </p>
         </div>
       </li>`
@@ -42,11 +47,11 @@ const createEmojiesMarkup = (emojies, currentEmoji) =>
     </label>`
   )).join('');
 
-const createFilmPopupTemplate = (film, state) => {
+const createFilmPopupTemplate = (film, state, deletedId) => {
   const {filmInfo, userDetails} = film;
   const {poster, ageRating, title, altTitle, totalRating, director, writers, actors, release, duration, genres, description} = filmInfo;
   const {alreadyWatched, inWatchlist, isFavorite} = userDetails;
-  const {currentEmoji, text, comments, areCommentsLoading} = state;
+  const {currentEmoji, text, comments, areCommentsLoading, isDeleting, isUploading} = state;
 
   return (
     `<section class="film-details">
@@ -128,17 +133,19 @@ const createFilmPopupTemplate = (film, state) => {
       :
       `<h3 class="film-details__comments-title">Comments <span class="film-details__comments-count">${comments.length}</span></h3>
       <ul class="film-details__comments-list">
-        ${createCommentsMarkup(comments)}
+        ${createCommentsMarkup(comments, isDeleting, deletedId)}
       </ul>`
     }    
 
             <form class="film-details__new-comment" action="" method="get">
               <div class="film-details__add-emoji-label">
-                ${currentEmoji ? `<img src="images/emoji/${currentEmoji}.png" width="55" height="55" alt="emoji-${currentEmoji}">` : ''}
+                ${currentEmoji && !isUploading ? `<img src="images/emoji/${currentEmoji}.png" width="55" height="55" alt="emoji-${currentEmoji}">` : ''}
               </div>
 
               <label class="film-details__comment-label">
-                <textarea class="film-details__comment-input" placeholder="Select reaction below and write comment here" name="comment">${text}</textarea>
+                <textarea class="film-details__comment-input"
+                  placeholder="Select reaction below and write comment here" name="comment"${isUploading ? ' disabled="disabled"' : ''}
+                >${isUploading ? 'Uploading...' : text}</textarea>
               </label>
 
               <div class="film-details__emoji-list">
@@ -158,6 +165,8 @@ export default class FilmPopupView extends AbstractStatefulView {
   #handleFilmStatusClick = null;
   #handleDeleteCommentClick = null;
   #handleSubmitComment = null;
+  #deletedId = null;
+  #commentCursorPosition = {selectionStart : 0, selectionEnd: 0};
 
   constructor({film, prevState, onCloseButtonClick, onFilmStatusClick, onDeleteCommentClick, onSubmitComment}) {
     super();
@@ -171,8 +180,24 @@ export default class FilmPopupView extends AbstractStatefulView {
   }
 
   get template() {
-    return createFilmPopupTemplate(this.#film, this._state);
+    return createFilmPopupTemplate(this.#film, this._state, this.#deletedId);
   }
+
+  shakeControls = () => {
+    const controlsElement = this.element.querySelector('.film-details__controls');
+    this.#shakeInnerElement(controlsElement);
+  };
+
+  shakeForm = () => {
+    const formElement = this.element.querySelector('.film-details__new-comment');
+    this.#shakeInnerElement(formElement);
+  };
+
+  shakeComment = () => {
+    const commentButtonElement = this.element.querySelector(`.film-details__comment-delete[data-id="${this.#deletedId}"]`);
+    const commentElement = commentButtonElement?.closest('.film-details__comment');
+    this.#shakeInnerElement(commentElement);
+  };
 
   init() {
     this._restoreHandlers();
@@ -193,6 +218,17 @@ export default class FilmPopupView extends AbstractStatefulView {
       areCommentsLoading,
       currentEmoji: '',
       text: '',
+      isDeleting: false,
+      isUploading: false,
+    });
+    this.element.scrollTo(0, prevScroll);
+  }
+
+  setLoader(isDeleting, isUploading) {
+    const prevScroll = this.element.scrollTop;
+    this.updateElement({
+      isDeleting,
+      isUploading,
     });
     this.element.scrollTo(0, prevScroll);
   }
@@ -204,6 +240,21 @@ export default class FilmPopupView extends AbstractStatefulView {
     this.element.querySelector('.film-details__comment-input').addEventListener('input', this.#commentTextChangeHandler);
     this.element.querySelector('.film-details__comments-list')?.addEventListener('click', this.#commentDeleteClickHandler);
     this.element.querySelector('.film-details__comment-input').addEventListener('keydown', this.#submitCommentHandler);
+    this.element.querySelector('.film-details__comment-input').addEventListener('selectionchange', this.#changeCommentTextCursorHandler);
+    this.element.querySelector('.film-details__emoji-list').addEventListener('change', this.#changeCommentEmojiHandler);
+  }
+
+  #resetLoader = () => {
+    const prevScroll = this.element.scrollTop;
+    this.updateElement({
+      isDeleting: false,
+      isUploading: false,
+    });
+    this.element.scrollTo(0, prevScroll);
+  };
+
+  #shakeInnerElement(innerElement) {
+    ({element: innerElement, shake: this.shake}).shake(this.#resetLoader);
   }
 
   #closeButtonClickHandler = () => {
@@ -236,17 +287,29 @@ export default class FilmPopupView extends AbstractStatefulView {
 
   #commentDeleteClickHandler = (evt) => {
     if (evt.target.dataset.id) {
+      this.#deletedId = evt.target.dataset.id;
       this.#handleDeleteCommentClick(evt.target.dataset.id);
     }
   };
 
+  #changeCommentTextCursorHandler = (evt) => {
+    const {selectionStart, selectionEnd} = evt.target;
+    this.#commentCursorPosition = {selectionStart, selectionEnd};
+  };
+
   #submitCommentHandler = (evt) => {
-    if (evt.key === 'Enter' && evt.ctrlKey) {
+    if (evt.key === 'Enter' && evt.ctrlKey && !this._state.isUploading) {
       const userComment = {comment: this._state.text, emotion: this._state.currentEmoji};
-      if (userComment.emotion && userComment.comment) {
-        this.#handleSubmitComment(userComment);
-      }
+      this.#handleSubmitComment(userComment);
     }
+  };
+
+  #changeCommentEmojiHandler = () => {
+    const commentTextElement = this.element.querySelector('.film-details__comment-input');
+    const {selectionStart, selectionEnd} = this.#commentCursorPosition;
+    commentTextElement.focus();
+    commentTextElement.selectionStart = selectionStart;
+    commentTextElement.selectionEnd = selectionEnd;
   };
 }
 

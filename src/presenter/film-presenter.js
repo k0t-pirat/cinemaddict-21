@@ -17,14 +17,14 @@ const statusTranslation = {
 export default class FilmPresenter {
   #film = null;
   #filmsContainer = null;
-
   #filmCardView = null;
   #filmPopupView = null;
-  #mode = Mode.DEFAULT;
+
   #handleModeChange = null;
   #handleDataChange = null;
   #handleCommentChange = null;
   #commentModel = null;
+  #mode = Mode.DEFAULT;
 
   constructor({ commentModel, filmsContainer, onModeChange, onDataChange, onCommentChange}) {
     this.#commentModel = commentModel;
@@ -50,6 +50,23 @@ export default class FilmPresenter {
     }
   }
 
+  setAborting(userAction) {
+    switch (userAction) {
+      case UserAction.EDIT_CARD:
+        this.#filmCardView.shake();
+        break;
+      case UserAction.EDIT_POPUP:
+        this.#filmPopupView.shakeControls();
+        break;
+      case UserAction.ADD:
+        this.#filmPopupView.shakeForm();
+        break;
+      case UserAction.DELETE:
+        this.#filmPopupView.shakeComment();
+        break;
+    }
+  }
+
   #handleCommentsLoad(comments) {
     this.#filmPopupView.updateComments(comments, this.#commentModel.isLoading);
   }
@@ -63,6 +80,8 @@ export default class FilmPresenter {
         this.init(update);
         this.#filmPopupView.updateComments(this.#commentModel.comments, false);
         break;
+      case UpdateType.LOAD:
+        this.#filmPopupView.setLoader(this.#commentModel.isDeleting, this.#commentModel.isUploading);
     }
   };
 
@@ -83,7 +102,7 @@ export default class FilmPresenter {
           this.#openPopup();
         }
       },
-      onFilmStatusClick: this.#handleFilmStatusClick,
+      onFilmStatusClick: this.#handleFilmStatusCardClick,
     });
     this.#filmPopupView = new FilmPopupView({
       film,
@@ -91,7 +110,7 @@ export default class FilmPresenter {
       onCloseButtonClick: () => {
         this.#closePopup();
       },
-      onFilmStatusClick: this.#handleFilmStatusClick,
+      onFilmStatusClick: this.#handleFilmStatusPopupClick,
       onDeleteCommentClick: this.#handleDeleteCommentClick,
       onSubmitComment: this.#handleSubmitComment,
     });
@@ -135,12 +154,20 @@ export default class FilmPresenter {
     this.#mode = Mode.DEFAULT;
   }
 
-  #handleFilmStatusClick = (status) => {
+  #handleFilmStatusCardClick = (status) => {
+    this.#handleFilmStatusClick(status, UserAction.EDIT_CARD);
+  };
+
+  #handleFilmStatusPopupClick = (status) => {
+    this.#handleFilmStatusClick(status, UserAction.EDIT_POPUP);
+  };
+
+  #handleFilmStatusClick = (status, userAction) => {
     const translatedStatus = statusTranslation[status];
     this.#handleDataChange({
       ...this.#film,
       userDetails: {...this.#film.userDetails, [translatedStatus]: !this.#film.userDetails[translatedStatus]},
-    });
+    }, userAction);
   };
 
   #handleDeleteCommentClick = (id) => {

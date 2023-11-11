@@ -6,6 +6,8 @@ export default class CommentModel extends Obervable {
   #isLoading = false;
   #filmModel = null;
   #commentsApiService = null;
+  #isUploading = false;
+  #isDeleting = false;
 
   constructor({filmModel, commentsApiService}) {
     super();
@@ -27,6 +29,8 @@ export default class CommentModel extends Obervable {
   }
 
   async addComment({userComment, film}) {
+    this.#isUploading = true;
+    this._notify(UpdateType.LOAD);
     try {
       const response = await this.#commentsApiService.addComment(userComment, film);
       const updatedFilm = this.#filmModel.addFilmComment(response.film);
@@ -34,12 +38,17 @@ export default class CommentModel extends Obervable {
         this.#comments = response.comments;
         this._notify(UpdateType.PATCH, updatedFilm);
       }
+
+      this.#isUploading = false;
     } catch {
+      this.#isUploading = false;
       throw new Error('Can\'t add film comment');
     }
   }
 
   async deleteComment({commentId, film}) {
+    this.#isDeleting = true;
+    this._notify(UpdateType.LOAD);
     try {
       const response = await this.#commentsApiService.deleteComment(commentId);
 
@@ -55,7 +64,9 @@ export default class CommentModel extends Obervable {
           this._notify(UpdateType.PATCH, updatedFilm);
         }
       }
+      this.#isDeleting = false;
     } catch {
+      this.#isDeleting = false;
       throw new Error('Can\'t delete film comment');
     }
   }
@@ -66,5 +77,13 @@ export default class CommentModel extends Obervable {
 
   get isLoading() {
     return this.#isLoading;
+  }
+
+  get isDeleting() {
+    return this.#isDeleting;
+  }
+
+  get isUploading() {
+    return this.#isUploading;
   }
 }

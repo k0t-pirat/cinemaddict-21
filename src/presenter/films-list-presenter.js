@@ -10,6 +10,12 @@ import { sortFilms } from '../util/sort';
 import LoaderView from '../view/loader-view';
 import { filterFilms } from '../util/common';
 import { FilterType } from '../const/common';
+import UiBlocker from '../framework/ui-blocker/ui-blocker';
+
+const TimeLimit = {
+  LOWER_LIMIT: 350,
+  UPPER_LIMIT: 1000,
+};
 
 export default class FilmsListPresenter {
   #mainContainer = null;
@@ -25,6 +31,10 @@ export default class FilmsListPresenter {
   #sortView = null;
   #activeSortType = SortType.DEFAULT;
   #loaderView = new LoaderView();
+  #uiBlocker = new UiBlocker({
+    lowerLimit: TimeLimit.LOWER_LIMIT,
+    upperLimit: TimeLimit.UPPER_LIMIT,
+  });
 
   constructor({container, filterModel, filmModel, commentModel}) {
     this.#mainContainer = container;
@@ -140,16 +150,28 @@ export default class FilmsListPresenter {
     this.#filmPresenters.forEach((presenter) => presenter.resetView());
   };
 
-  #handleFilmChange = (updatedFilm) => {
-    this.#filmModel.updateFilm(updatedFilm);
+  #handleFilmChange = async (updatedFilm, userAction) => {
+    this.#uiBlocker.block();
+    try {
+      await this.#filmModel.updateFilm(updatedFilm);
+    } catch {
+      this.#filmPresenters.get(updatedFilm.id).setAborting(userAction);
+    }
+    this.#uiBlocker.unblock();
   };
 
-  #handleCommentChange = (payload, userAction) => {
-    if (userAction === UserAction.DELETE) {
-      this.#commentModel.deleteComment(payload);
-    } else if (userAction === UserAction.ADD) {
-      this.#commentModel.addComment(payload);
+  #handleCommentChange = async (payload, userAction) => {
+    this.#uiBlocker.block();
+    try {
+      if (userAction === UserAction.DELETE) {
+        await this.#commentModel.deleteComment(payload);
+      } else if (userAction === UserAction.ADD) {
+        await this.#commentModel.addComment(payload);
+      }
+    } catch {
+      this.#filmPresenters.get(payload.film.id).setAborting(userAction);
     }
+    this.#uiBlocker.unblock();
   };
 
   #handleSortChange = (sortType) => {

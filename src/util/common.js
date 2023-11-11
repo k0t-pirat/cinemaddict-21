@@ -6,12 +6,6 @@ export function updateItem(items, update) {
   return items.map((item) => item.id === update.id ? update : item);
 }
 
-// export const persistViewScroll = (oldView, newView) => {
-//   const currentYCoord = oldView.element.scrollTop;
-//   console.log('currentYCoord', currentYCoord)
-//   newView.element.scrollTo(0, currentYCoord);
-// };
-
 export const replaceWithScroll = (newView, oldView) => {
   const currentYCoord = oldView.element.scrollTop;
   replace(newView, oldView);
