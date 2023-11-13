@@ -28,6 +28,7 @@ export default class FilmsListPresenter {
   #showMorePresenter = null;
   #filmPresenters = new Map();
   #resetAllPresenters = null;
+  #checkIfPresenterEditing = null;
 
   #sortView = null;
   #activeSortType = SortType.DEFAULT;
@@ -44,6 +45,7 @@ export default class FilmsListPresenter {
     this.#commentModel = commentModel;
     this.#filmPresenters = presenterStore.filmPresenters;
     this.#resetAllPresenters = presenterStore.resetAllPresenters;
+    this.#checkIfPresenterEditing = presenterStore.checkIfPresenterEditing;
   }
 
   init() {
@@ -90,6 +92,7 @@ export default class FilmsListPresenter {
         onModeChange: this.#handleModeChange,
         onDataChange: this.#handleFilmChange,
         onCommentChange: this.#handleCommentChange,
+        checkIfPresenterEditing: this.#checkIfPresenterEditing,
       });
       filmPresenter.init(film);
       this.#filmPresenters.set(film.id, filmPresenter);

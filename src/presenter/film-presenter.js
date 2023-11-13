@@ -1,13 +1,9 @@
-import { UpdateType, UserAction } from '../const';
+import { Mode, UpdateType, UserAction } from '../const';
 import { remove, render, replace } from '../framework/render';
 import { replaceWithScroll } from '../util/common';
 import FilmCardView from '../view/film-card-view';
 import FilmPopupView from '../view/film-popup-view';
 
-const Mode = {
-  DEFAULT: 'DEFAULT',
-  EDITING: 'EDITING',
-};
 const statusTranslation = {
   watchlist: 'inWatchlist',
   watched: 'alreadyWatched',
@@ -25,13 +21,15 @@ export default class FilmPresenter {
   #handleCommentChange = null;
   #commentModel = null;
   #mode = Mode.DEFAULT;
+  #checkIfPresenterEditing = null;
 
-  constructor({ commentModel, filmsContainer, onModeChange, onDataChange, onCommentChange}) {
+  constructor({ commentModel, filmsContainer, onModeChange, onDataChange, onCommentChange, checkIfPresenterEditing}) {
     this.#commentModel = commentModel;
     this.#filmsContainer = filmsContainer;
     this.#handleModeChange = onModeChange;
     this.#handleDataChange = onDataChange;
     this.#handleCommentChange = onCommentChange;
+    this.#checkIfPresenterEditing = checkIfPresenterEditing;
     this.#commentModel.addObserver(this.#observeCommentModelPatch);
   }
 
@@ -66,6 +64,10 @@ export default class FilmPresenter {
         this.#filmPopupView.shakeComment();
         break;
     }
+  }
+
+  get mode() {
+    return this.#mode;
   }
 
   #handleCommentsLoad(comments) {
@@ -106,7 +108,8 @@ export default class FilmPresenter {
     this.#filmCardView = new FilmCardView({
       film,
       onLinkClick: () => {
-        if (this.#mode !== Mode.EDITING) {
+        const isEditing = this.#checkIfPresenterEditing(this.#film.id);
+        if (!isEditing) {
           this.#openPopup();
         }
       },
@@ -131,8 +134,10 @@ export default class FilmPresenter {
     replace(this.#filmCardView, prevFilmCardView);
 
     if (this.#mode === Mode.EDITING) {
+      prevFilmPopupView.unmount();
       replaceWithScroll(this.#filmPopupView, prevFilmPopupView);
       this.#filmPopupView.init();
+      this.#filmPopupView.mount();
     }
   }
 
@@ -147,8 +152,8 @@ export default class FilmPresenter {
     this.#initCommentModel();
     this.#handleModeChange();
     render(this.#filmPopupView, document.body);
-    this.#filmPopupView.mount();
     this.#filmPopupView.init();
+    this.#filmPopupView.mount();
     document.body.classList.add('hide-overflow');
     document.addEventListener('keydown', this.#escKeydownHandler);
     this.#mode = Mode.EDITING;

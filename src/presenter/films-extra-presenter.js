@@ -57,6 +57,7 @@ export default class FilmsExtraPresenter {
   #ratedFilms = [];
   #commentedFilms = [];
   #resetAllPresenters = null;
+  #checkIfPresenterEditing = null;
 
   #filmRatedPresenters = new Map();
   #filmCommentedPresenters = new Map();
@@ -72,6 +73,7 @@ export default class FilmsExtraPresenter {
     this.#filmRatedPresenters = presenterStore.filmRatedPresenters;
     this.#filmCommentedPresenters = presenterStore.filmCommentedPresenters;
     this.#resetAllPresenters = presenterStore.resetAllPresenters;
+    this.#checkIfPresenterEditing = presenterStore.checkIfPresenterEditing;
   }
 
   init() {
@@ -157,6 +159,7 @@ export default class FilmsExtraPresenter {
         onModeChange: this.#handleModeChange,
         onDataChange: this.#handleFilmChange,
         onCommentChange: this.#handleCommentChange,
+        checkIfPresenterEditing: this.#checkIfPresenterEditing,
       });
       filmPresenter.init(film);
       this.#filmRatedPresenters.set(film.id, filmPresenter);
@@ -175,6 +178,7 @@ export default class FilmsExtraPresenter {
         onModeChange: this.#handleModeChange,
         onDataChange: this.#handleFilmChange,
         onCommentChange: this.#handleCommentChange,
+        checkIfPresenterEditing: this.#checkIfPresenterEditing,
       });
       filmPresenter.init(film);
       this.#filmCommentedPresenters.set(film.id, filmPresenter);

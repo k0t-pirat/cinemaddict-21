@@ -9,7 +9,7 @@ import FilterModel from './model/filter-model';
 import FilmsApiService from './films-api-service';
 import CommentsApiService from './comments-api-service';
 import { RenderPosition, render } from './framework/render';
-import { UpdateType } from './const';
+import { Mode, UpdateType } from './const';
 import FilmsExtraPresenter from './presenter/films-extra-presenter';
 
 const AUTHORIZATION = 'Basic aaaab';
@@ -19,7 +19,6 @@ const headerContainer = document.querySelector('.header');
 const mainContainer = document.querySelector('.main');
 const footerContainer = document.querySelector('.footer__statistics');
 
-
 const presenterStore = {
   filmPresenters: new Map(),
   filmRatedPresenters: new Map(),
@@ -28,6 +27,13 @@ const presenterStore = {
     presenterStore.filmPresenters.forEach((presenter) => presenter.resetView());
     presenterStore.filmRatedPresenters.forEach((presenter) => presenter.resetView());
     presenterStore.filmCommentedPresenters.forEach((presenter) => presenter.resetView());
+  },
+  checkIfPresenterEditing: (id) => {
+    const filmPresenterMode = presenterStore.filmPresenters.get(id)?.mode;
+    const filmRatedPresenterMode = presenterStore.filmRatedPresenters.get(id)?.mode;
+    const filmCommentedPresenterMode = presenterStore.filmCommentedPresenters.get(id)?.mode;
+
+    return filmPresenterMode === Mode.EDITING || filmRatedPresenterMode === Mode.EDITING || filmCommentedPresenterMode === Mode.EDITING;
   },
 };
 

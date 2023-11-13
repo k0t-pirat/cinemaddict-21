@@ -166,7 +166,7 @@ export default class FilmPopupView extends AbstractStatefulView {
   #handleDeleteCommentClick = null;
   #handleSubmitComment = null;
   #deletedId = null;
-  #commentCursorPosition = {selectionStart : 0, selectionEnd: 0};
+  #commentCursorPosition = {selectionStart: 0, selectionEnd: 0};
 
   constructor({film, prevState, onCloseButtonClick, onFilmStatusClick, onDeleteCommentClick, onSubmitComment}) {
     super();
@@ -301,6 +301,8 @@ export default class FilmPopupView extends AbstractStatefulView {
   };
 
   #changeCommentTextCursorHandler = () => {
+    // console.log('document.activeElement', document.activeElement)
+    // console.log('film-details__comment-input', this.element.querySelector('.film-details__comment-input'))
     if (document.activeElement !== this.element.querySelector('.film-details__comment-input')) {
       return;
     }

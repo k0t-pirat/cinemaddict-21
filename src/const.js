@@ -18,3 +18,8 @@ export const UserAction = {
   ADD: 'ADD',
   DELETE: 'DELETE',
 };
+
+export const Mode = {
+  DEFAULT: 'DEFAULT',
+  EDITING: 'EDITING',
+};
