@@ -1,9 +1,11 @@
 import { SortType } from '../const';
 import AbstractView from '../framework/view/abstract-view';
 
+const ACTIVE_SORT_TYPES_COUNT = 3;
+
 const createSortTemplate = (activeSortType) => (
   `<ul class="sort">
-  ${Object.values(SortType).map((sortType) => (
+  ${Object.values(SortType).slice(0, ACTIVE_SORT_TYPES_COUNT).map((sortType) => (
     `<li>
       <a href="#" data-sort-type="${sortType}" class="sort__button${sortType === activeSortType ? ' sort__button--active' : ''}">
         Sort by ${sortType}

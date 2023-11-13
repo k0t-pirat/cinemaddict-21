@@ -32,6 +32,7 @@ export default class FilmPresenter {
     this.#handleModeChange = onModeChange;
     this.#handleDataChange = onDataChange;
     this.#handleCommentChange = onCommentChange;
+    this.#commentModel.addObserver(this.#observeCommentModelPatch);
   }
 
   init(film) {
@@ -85,9 +86,16 @@ export default class FilmPresenter {
     }
   };
 
+  #observeCommentModelPatch = (updateType, update) => {
+    if (updateType === UpdateType.PATCH && update.id === this.#film.id) {
+      this.init(update);
+    }
+  };
+
   #initCommentModel() {
     this.#commentModel.init(this.#film.id);
     this.#commentModel.addObserver(this.#observeCommentModel);
+    this.#commentModel.removeObserver(this.#observeCommentModelPatch);
   }
 
   #renderFilm(film) {
@@ -139,6 +147,7 @@ export default class FilmPresenter {
     this.#initCommentModel();
     this.#handleModeChange();
     render(this.#filmPopupView, document.body);
+    this.#filmPopupView.mount();
     this.#filmPopupView.init();
     document.body.classList.add('hide-overflow');
     document.addEventListener('keydown', this.#escKeydownHandler);
@@ -146,9 +155,11 @@ export default class FilmPresenter {
   }
 
   #closePopup() {
+    this.#commentModel.addObserver(this.#observeCommentModelPatch);
     this.#commentModel.removeObserver(this.#observeCommentModel);
     this.#filmPopupView.reset();
     remove(this.#filmPopupView);
+    this.#filmPopupView.unmount();
     document.body.classList.remove('hide-overflow');
     document.removeEventListener('keydown', this.#escKeydownHandler);
     this.#mode = Mode.DEFAULT;

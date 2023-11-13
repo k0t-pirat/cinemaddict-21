@@ -1,14 +1,16 @@
 import FooterStatisticsView from './view/footer-statistics-view';
+import FilmsWrapperView from './view/films-wrapper-view';
 import FilmsListPresenter from './presenter/films-list-presenter';
-import FilmModel from './model/film-model';
-import { RenderPosition, render } from './framework/render';
 import FilterPresenter from './presenter/filter-presenter';
-import FilterModel from './model/filter-model';
 import UserRankPresenter from './presenter/user-rank-presenter';
+import FilmModel from './model/film-model';
 import CommentModel from './model/comment-model';
-import { UpdateType } from './const';
+import FilterModel from './model/filter-model';
 import FilmsApiService from './films-api-service';
 import CommentsApiService from './comments-api-service';
+import { RenderPosition, render } from './framework/render';
+import { UpdateType } from './const';
+import FilmsExtraPresenter from './presenter/films-extra-presenter';
 
 const AUTHORIZATION = 'Basic aaaab';
 const END_POINT = 'https://21.objects.pages.academy/cinemaddict';
@@ -16,6 +18,18 @@ const END_POINT = 'https://21.objects.pages.academy/cinemaddict';
 const headerContainer = document.querySelector('.header');
 const mainContainer = document.querySelector('.main');
 const footerContainer = document.querySelector('.footer__statistics');
+
+
+const presenterStore = {
+  filmPresenters: new Map(),
+  filmRatedPresenters: new Map(),
+  filmCommentedPresenters: new Map(),
+  resetAllPresenters: () => {
+    presenterStore.filmPresenters.forEach((presenter) => presenter.resetView());
+    presenterStore.filmRatedPresenters.forEach((presenter) => presenter.resetView());
+    presenterStore.filmCommentedPresenters.forEach((presenter) => presenter.resetView());
+  },
+};
 
 const filterModel = new FilterModel();
 
@@ -41,5 +55,11 @@ userRankPresenter.init();
 const filterPresenter = new FilterPresenter({filterContainer: mainContainer, filterModel, filmModel});
 filterPresenter.init();
 
-const filmsListPresenter = new FilmsListPresenter({container: mainContainer, filterModel, filmModel, commentModel});
+const filmsWrapperView = new FilmsWrapperView();
+render(filmsWrapperView, mainContainer);
+
+const filmsListPresenter = new FilmsListPresenter({filmsContainer: filmsWrapperView.element, filterModel, filmModel, commentModel, presenterStore});
 filmsListPresenter.init();
+
+const filmsExtraPresenter = new FilmsExtraPresenter({filmsContainer: filmsWrapperView.element, filmModel, commentModel, presenterStore});
+filmsExtraPresenter.init();

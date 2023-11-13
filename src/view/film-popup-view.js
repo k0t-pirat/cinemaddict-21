@@ -203,6 +203,14 @@ export default class FilmPopupView extends AbstractStatefulView {
     this._restoreHandlers();
   }
 
+  mount() {
+    document.addEventListener('selectionchange', this.#changeCommentTextCursorHandler);
+  }
+
+  unmount() {
+    document.removeEventListener('selectionchange', this.#changeCommentTextCursorHandler);
+  }
+
   reset() {
     this._setState(defaultState);
   }
@@ -240,7 +248,7 @@ export default class FilmPopupView extends AbstractStatefulView {
     this.element.querySelector('.film-details__comment-input').addEventListener('input', this.#commentTextChangeHandler);
     this.element.querySelector('.film-details__comments-list')?.addEventListener('click', this.#commentDeleteClickHandler);
     this.element.querySelector('.film-details__comment-input').addEventListener('keydown', this.#submitCommentHandler);
-    this.element.querySelector('.film-details__comment-input').addEventListener('selectionchange', this.#changeCommentTextCursorHandler);
+    // this.element.querySelector('.film-details__comment-input').addEventListener('selectionchange', this.#changeCommentTextCursorHandler);
     this.element.querySelector('.film-details__emoji-list').addEventListener('change', this.#changeCommentEmojiHandler);
   }
 
@@ -292,10 +300,19 @@ export default class FilmPopupView extends AbstractStatefulView {
     }
   };
 
-  #changeCommentTextCursorHandler = (evt) => {
-    const {selectionStart, selectionEnd} = evt.target;
+  #changeCommentTextCursorHandler = () => {
+    if (document.activeElement !== this.element.querySelector('.film-details__comment-input')) {
+      return;
+    }
+    const textElement = document.activeElement;
+    const {selectionStart, selectionEnd} = textElement;
     this.#commentCursorPosition = {selectionStart, selectionEnd};
   };
+
+  // #changeCommentTextCursorHandler = (evt) => {
+  //   const {selectionStart, selectionEnd} = evt.target;
+  //   this.#commentCursorPosition = {selectionStart, selectionEnd};
+  // };
 
   #submitCommentHandler = (evt) => {
     if (evt.key === 'Enter' && evt.ctrlKey && !this._state.isUploading) {
